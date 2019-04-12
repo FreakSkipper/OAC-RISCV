@@ -5,5 +5,5 @@
 * Eduardo F. Assis;
 
 ### Trabalhando no repositório:
-* Cada usuário cria sua branch, quantas quiserem (<autor>_<etc>);
-* Para alterar no branch master, fazer merge request.
+* Cada usuário cria sua branch, quantas quiserem (*autor*_*etc*);
+* Para alterar no branch master, fazer pull request.
