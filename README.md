@@ -11,7 +11,7 @@ Facilitar e organizar o fluxo de trabalho do grupo.
 * Para alterar no branch master, fazer _pull request_.
 
 ### TODO:
-* Projeto King Kong:
+* Projeto Donkey Kong:
   * [ ] Discutir sobre a UI;
   * [ ] Organização dos arquivos;
   * [ ] Quantidade de sprites e cenários;
@@ -29,3 +29,5 @@ Facilitar e organizar o fluxo de trabalho do grupo.
   - https://githowto.com/pt-BR
   - https://dzone.com/articles/top-20-git-commands-with-examples
   - https://www.udemy.com/git-e-github-para-iniciantes/learn/v4/overview
+* **Donkey Kong**:
+  * [Gameplay NES](https://www.youtube.com/watch?v=C_PrG8P5W8o)
