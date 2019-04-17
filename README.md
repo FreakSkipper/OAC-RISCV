@@ -31,3 +31,4 @@ Facilitar e organizar o fluxo de trabalho do grupo.
   - https://www.udemy.com/git-e-github-para-iniciantes/learn/v4/overview
 * **Donkey Kong**:
   * [Gameplay NES](https://www.youtube.com/watch?v=C_PrG8P5W8o)
+  * [Sprites NES](http://www.mariomayhem.com/downloads/sprites/donkey_kong_sprites.php)
