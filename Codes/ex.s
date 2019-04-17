@@ -1,4 +1,4 @@
-###############  EX.S  ################ (15 #(2 espaços)<arquivo>(2 espaços)15 #)
+###############  EX.S  ################ (15 #(2 espacos)<arquivo>(2 espacos)15 #)
 # settings:
 # - tab = 4
 # comentarios adicionais...
@@ -19,7 +19,7 @@ C_return: .byte '\n'
 
 
 .text
-# funções: tudo maiusculo
+# funcoes: tudo maiusculo
 # <NOME>_<DERIVACAO>*_<FUNCIONALIDADE>*_<subgrupos>*_<etc>*
 # (*) -> se houver necessidade!
 
@@ -84,7 +84,7 @@ MAIN: nop
 	
 	jal zero, EXIT
 
-####################  PRINT (20 # + 2 espaços + <nome>)
+####################  PRINT (20 # + 2 espaacos + <nome>)
 ## Printa vetor int 		(## + <breve descricao>)
 # a0 -> end. vetor int		(# + argumentos)
 # a1 -> tam. vetor

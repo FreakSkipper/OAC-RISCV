@@ -1,5 +1,13 @@
 # random files
 swap.s
 
-# java files
+# extension files
 *.jar
+*.zip
+*.out
+*.exe
+
+# folders
+System_Rars/
+bmp2isc/
+Imagens\ PNG/
