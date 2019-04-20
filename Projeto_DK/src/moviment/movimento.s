@@ -1,6 +1,6 @@
 .data
-.include "..\..\images\isc.s"
-.include "..\..\images\barril.s"
+.include "..\..\images\mapa.s"
+.include "..\..\images\barril2.s"
 	#Quadrado: .space 3600 	# quadrado simulando personagem
 #	struct objetos{
 #		imagem[],
@@ -13,7 +13,7 @@
 
 	# Objetos[20]
 	# 20 x 6 = 120
-	Objetos: .word 	barril,256,0,16,4,1,barril,256,38400,16,32,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	Objetos: .word 	barril,144,0,12,4,1,barril,144,38400,12,4,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 	
@@ -31,7 +31,7 @@ WHILE1_MAIN: nop
 	li a7, 5 # ler inteiro do teclado
 	ecall
 	
-	beq a0, zero, FORA_WHILE1_MAIN # if ( num != 0)
+	beq a0, zero, FORA_WHILE1_MAIN # if ( num != 0 )
 
 	la a0, Objetos 			# vetor contendo objetos
 	li a1, 120				# tamanho do vetor
@@ -145,6 +145,50 @@ PULAR_LINHA_APAGAR_QUADRADO: nop
 	jal zero, VOLTA_APAGAR_IF
 ##############################
 
+#################### int verificar_pixel(int imagem[], int tamanho, int posicaoInicial, int colunas, int mapa[], int cor)
+## Detecta se um Pixel com tal cor já está desenhado
+# a0 -> vetor contendo a imagem
+# a1 -> tamanho do vetor de imagem
+# a2 -> posicao inicial no Display
+# a3 -> a quantidade de colunas que a imagem ocupa em bytes
+# a4 -> vetor contendo o mapa
+# a5 -> cor a ser encontrada
+## retorna valor booleano
+# a0 -> 1 se existir, 0 se nao existir
+VERIFICAR_PIXEL: nop
+	addi t0, a0, 0 # vetor imagem
+	addi t1, a1, 0 # tamanho da imagem
+	add t1, t1, t0 # endereco final da imagem
+	addi t2, a3, 0 # contador colunas
+	addi t3, a4, 8 # vetor mapa
+	add t3, t3, a2 # posicao exata do objeto
+	addi t4, a5, 0 # cor a ser verificada
+	addi a0, zero, 0 # retorno = 0
+	
+FOR1_VERIFICAR_PIXEL: nop
+		lb t5, 0(t3) # ve a cor do pixel
+		beq t5, t4, ENCONTROU_PIXEL # if ( corVerificada == cor )
+		addi t0, t0, 1
+		addi t3, t3, 1
+
+		addi t2, t2, -1
+		beq t2, zero, PULAR_LINHA_VERIFICAR_PIXEL # if (contador == 0)
+VOLTA_VERIFICAR_PIXEL_IF1:
+		bne t0, t1, FOR1_VERIFICAR_PIXEL
+	ret
+
+ENCONTROU_PIXEL: nop
+		addi a0, zero, 1 # retorno = 1
+		ret
+PULAR_LINHA_VERIFICAR_PIXEL: nop
+	addi t5, zero, 320 	# total de 320 colunas em uma linha
+	sub t5, t5, a3 		# conserto de distancia 320 - 60
+	add t3, t3, t5
+	add t2, zero, a3 	# reseta contador
+	jal zero, VOLTA_VERIFICAR_PIXEL_IF1
+		
+###############################
+	
 #################### int mover_quadrado(int imagem[], int tamanho, int posicaoInicial, int colunas, int velocidade)
 ## Move o quadrado no display
 # a0 -> vetor contendo a imagem
@@ -155,18 +199,43 @@ PULAR_LINHA_APAGAR_QUADRADO: nop
 ## retorna a nova posicao
 # a0 -> nova posicao
 MOVER_QUADRADO: nop
-	addi sp, sp, -4 		# inicia pilha
+	addi sp, sp, -24 		# inicia pilha
 	sw ra, 0(sp) 			# salva retorno na pilha
+	sw a0, 4(sp)			# salva argumentos na pilha para nao perder
+	sw a1, 8(sp)
+	sw a2, 12(sp)
+	sw a3, 16(sp)	
+	sw a4, 20(sp)
 	
 	jal ra, APAGAR_QUADRADO # Apaga o anterior
+	
 	add a2, a2, a4			# adiciona as posicoes necessarias
+	
+	la a4, frame1			# mapa
+	li a5, 79				# cor
+	jal ra, VERIFICAR_PIXEL # verificar colisao
+	
+	lw a1, 8(sp)			# recupera argumentos na pilha
+	lw a3, 16(sp)
+	lw a4, 20(sp)
+	
+	beq a0, zero, SETAR_GRAVIDADE
+VOLTA_IF1_MOVER_QUADRADO: nop
+	
+	lw a0, 4(sp)			# recupera a0 na pilha
+	
 	jal ra, CRIAR_QUADRADO	# cria o objeto
 	
 	lw ra, 0(sp) 			# le o valor de retorno
-	addi sp, sp, 4 			# encerra pilha
+	addi sp, sp, 24			# encerra pilha
 	
 	addi a0, a2, 0			# nova posicao do objeto
 	ret
+SETAR_GRAVIDADE: nop
+	addi t0, zero, 320
+	slli t0, t0, 2
+	add a2, a2, t0
+	jal zero, VOLTA_IF1_MOVER_QUADRADO
 ##############################
 
 #################### void mover_objetos(int Objetos[], int tamanho)
