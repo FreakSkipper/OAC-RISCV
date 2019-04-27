@@ -4,14 +4,21 @@
 .data
 .include "..\..\Imagens\brasil.s"
 .include "..\..\Imagens\botafogo.s"
-
+.include "..\..\Imagens\quadrado7.s"
+.include "..\..\Imagens\imagempeqconv.s"
 .text
 MAIN: 	la a0, brasil
 		jal PRINTA
+		jal CLR
+
 		la a0, botafogo
 		jal PRINTA
-	 	j EXIT
 	 	
+		j EXIT
+		
+#################### void PRINTA_INICIO(a0)
+# a0 -> end. imagem	
+# (!) usa DISP_BEGIN
 PRINTA_INICIO: la a0, brasil
 		lw a2, 0(a0)
 		lw a3, 4(a0)
@@ -45,8 +52,11 @@ PRINTA_INICIO_CASE1: addi a1, a1, 320
 		j PRINTA_INICIO_LOOP
 		
 PRINTA_INICIO_EXIT: ret
+##############################
 
-
+#################### void PRINTA(a0)
+# a0 -> end. imagem
+# (!) usa DISP_BEGIN
 PRINTA: lw t1, 0(a0)			# carrega num colunas (X)
 		lw t2, 4(a0) 			# carrrega num linhas (Y)
 		mv a2, t1
@@ -59,7 +69,7 @@ PRINTA: lw t1, 0(a0)			# carrega num colunas (X)
 		mul s1, t1, t2			# quanto pixels para printar (contador)
 		
 		li a1, DISP_BEGIN
-		addi a0, a0, 8			# avança no vetor da imagem
+		addi a0, a0, 8			# avanï¿½a no vetor da imagem
 		
 		li t3, 320				# t4 margem vertical
 		sub t3, t3, a2
@@ -78,17 +88,12 @@ PRINTA: lw t1, 0(a0)			# carrega num colunas (X)
 		mv t3, a2
 		li t4, 0
 		
-# fazer retornar dp de printar a ultima ncol
-# ir para a linha de baixo
-# a2 -> ncol da img
-# a3 -> nlin da img
 PRINTA_LOOP: bge t0, s1, PRINTA_EXIT			# a0 end imagem / a1 pos inicial / t0 cont pixels / t3 cont col (X)/ t4 cont linha (Y) 
 		beq t3, zero, PRINTA_CASE1				# t3 cont (ncol) >= a2 (ncol) ? PRINTA_CASE1
 		lb t1, 0(a0)							# lendo do end. da imagem
 		sb t1, 0(a1)							# gravando no BMP Display
 		addi a0, a0, 1							# att end. imagem
 		addi a1, a1, 1							# att end. bmp display
-		
 		
 		addi t0, t0, 1							# contador pixels
 		addi t3, t3, -1							# contador colunas
@@ -101,6 +106,22 @@ PRINTA_CASE1: addi a1, a1, 320						# descendo uma linha
 		j PRINTA_LOOP
 		
 PRINTA_EXIT: ret
-	
+##############################
+
+#################### void CLR()
+# Preenche de branco o display
+# (!) utiliza DISP_BEGIN, DISP_END
+CLR: li t0, DISP_BEGIN
+		li t1, DISP_END
+		li t2, 0
+CLR_LOOP: blt t1, t0, CLR_EXIT
+		sw t2, 0(t0)
+
+		addi t0, t0, 4
+		j CLR_LOOP
+CLR_EXIT: ret
+##############################
+
+
 EXIT: 	li a7, 10	
 		ecall
