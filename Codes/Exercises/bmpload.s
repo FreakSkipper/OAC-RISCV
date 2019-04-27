@@ -2,7 +2,7 @@
 .eqv BTMPf 0xFF012C00
 
 .data
-.include "..\images\teste.s"
+.include "..\..\Imagens\teste.s"
 
 .text
 MAIN: nop

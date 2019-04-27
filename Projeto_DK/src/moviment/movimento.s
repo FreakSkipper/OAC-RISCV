@@ -5,17 +5,22 @@
 #	struct objetos{
 #		imagem[],
 #		tamanho,
-#		posicao,
+#		posicaoX,
+#		posicaoY,
 #		largura,
 #		velocidade (pixels),
 #		direcao (0 - esquerda; 1 - direita)
 #	} Objetos
 
 	# Objetos[20]
-	# 20 x 6 = 120
-	Objetos: .word 	barril,144,0,12,4,1,barril,144,38400,12,4,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+	# 20 x 7 = 140
+	Objetos: .word 	barril,144,0,0,12,4,1,0,144,0,120,12,4,1,0,0,0,0,0,0,0,
+					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+					0,0,0,0,0,0,0,0,0,0,0,0,0,0
 	
 	mensagem: .string "Escreva um numero para mover diferente de zero\n"
 .text
@@ -34,7 +39,7 @@ WHILE1_MAIN: nop
 	beq a0, zero, FORA_WHILE1_MAIN # if ( num != 0 )
 
 	la a0, Objetos 			# vetor contendo objetos
-	li a1, 120				# tamanho do vetor
+	li a1, 140				# tamanho do vetor
 	jal ra, MOVER_OBJETOS 	# move todos os objetos no vetor
 	
 	jal zero, WHILE1_MAIN
@@ -189,52 +194,63 @@ PULAR_LINHA_VERIFICAR_PIXEL: nop
 		
 ###############################
 	
-#################### int mover_quadrado(int imagem[], int tamanho, int posicaoInicial, int colunas, int velocidade)
+#################### void mover_quadrado(objeto[])
 ## Move o quadrado no display
-# a0 -> vetor contendo a imagem
-# a1 -> tamanho do vetor de imagem
-# a2 -> posicao inicial no Display
-# a3 -> a quantidade de colunas que a imagem ocupa em bytes
-# a4 -> velocidade
-## retorna a nova posicao
-# a0 -> nova posicao
+# a0 -> objeto a ser movido
 MOVER_QUADRADO: nop
-	addi sp, sp, -24 		# inicia pilha
+	addi sp, sp, -8 		# inicia pilha
 	sw ra, 0(sp) 			# salva retorno na pilha
-	sw a0, 4(sp)			# salva argumentos na pilha para nao perder
-	sw a1, 8(sp)
-	sw a2, 12(sp)
-	sw a3, 16(sp)	
-	sw a4, 20(sp)
+	sw a0, 4(sp)			# salva o endereco do objeto na memoria
+	
+	addi t0, a0, 0			# move a0 para t0
+	
+	# le da memoria os valores do objeto
+	lw a0, 0(t0)			# le o vetor imagem do objeto
+	lw a1, 4(t0)			# le o tamanho da imagem
+	lw t1, 8(t0)			# le a posicaoX do objeto
+	lw t2, 12(t0)			# le a posicaoY do objeto
+	lw a3, 16(t0)			# le a largura do objeto
+	lw a4, 20(t0)			# le a velocidade
+	
+	# posicao = 320*y + x + EnderecoDisplay
+	addi a2, zero, 320		# a2 = 320
+	mul a2, a2, t2			# 320 * y
+	add a2, a2, t1			# 320 * y + x
 	
 	jal ra, APAGAR_QUADRADO # Apaga o anterior
 	
+	lw t0, 4(sp)			# recupera o endereco do objeto
+	lw t1, 8(t0)			# recupera a posicaoX
 	add a2, a2, a4			# adiciona as posicoes necessarias
+	add t1, t1, a4			# adicionar o X necessario
+	sw t1, 8(t0)			# salva a nova posicao
 	
 	la a4, frame1			# mapa
 	li a5, 79				# cor
 	jal ra, VERIFICAR_PIXEL # verificar colisao
 	
-	lw a1, 8(sp)			# recupera argumentos na pilha
-	lw a3, 16(sp)
-	lw a4, 20(sp)
+	lw t0, 4(sp)			# recupera o endereco do objeto
 	
 	beq a0, zero, SETAR_GRAVIDADE
 VOLTA_IF1_MOVER_QUADRADO: nop
 	
-	lw a0, 4(sp)			# recupera a0 na pilha
+	lw a0, 0(t0)			# recupera a0 na pilha
+	lw a4, 16(t0)			# le a velocidade	
 	
 	jal ra, CRIAR_QUADRADO	# cria o objeto
 	
 	lw ra, 0(sp) 			# le o valor de retorno
-	addi sp, sp, 24			# encerra pilha
+	addi sp, sp, 8			# encerra pilha
 	
-	addi a0, a2, 0			# nova posicao do objeto
 	ret
 SETAR_GRAVIDADE: nop
-	addi t0, zero, 320
-	slli t0, t0, 2
-	add a2, a2, t0
+	addi t1, zero, 320		# colunas para nova linha
+	slli t1, t1, 2			# multiplica por 4 ( + 4 linhas )
+	add a2, a2, t1			# aumenta 4 linhas na posicao
+	
+	lw t2, 12(t0)			# recupera posicao Y
+	addi t2, t2, 4			# nova posicao Y
+	sw t2, 12(t0)			# salva a nova posicao
 	jal zero, VOLTA_IF1_MOVER_QUADRADO
 ##############################
 
@@ -256,8 +272,8 @@ FOR1_MOVER_OBJETOS: nop
 	bne a0, zero, OBJETO_ENCONTRADO # verifica se o objeto existe (imagem != 0)
 
 VOLTA_IF1_MOVER_OBJETOS: nop
-	addi t2, t2, -6 # i-- 
-	addi t0, t0, 24 # move 6 posicoes no vetor
+	addi t2, t2, -7 # i-- 
+	addi t0, t0, 28 # move 6 posicoes no vetor
 	bne t2, zero, FOR1_MOVER_OBJETOS # if ( i != 0 )
 	
 	lw ra, 0(sp) 		# pega o retorno na pilha
@@ -265,6 +281,7 @@ VOLTA_IF1_MOVER_OBJETOS: nop
 	ret
 	
 OBJETO_ENCONTRADO:
+	addi a0, t0, 0	# a0 = objeto
 	lw a1, 4(t0) 	# pega o tamanho no vetor
 	lw a2, 8(t0) 	# pega a posicao no vetor
 	lw a3, 12(t0) 	# pega a largura no vetor
@@ -280,8 +297,6 @@ OBJETO_ENCONTRADO:
 	lw t0, 0(sp) 	# pega na pilha o valor de t0
 	lw t1, 4(sp) 	# pega na pilha o valor de t1
 	lw t2, 8(sp) 	# pega na pilha o valor de t2
-	
-	sw a0, 8(t0) 	# salva a nova posicao no vetor
 	
 	addi sp, sp, 12 # libera pilha
 	
