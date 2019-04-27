@@ -2,7 +2,7 @@
 
 .data
 	N: 			.word 	0
-	C:			.space 	320		# 20 casas (words)
+	C:			.space 	160		# 20 casas (words)
 	pergunta: 	.string "Insira N:\n"
 	case1: 		.string "Reinsira N (N <= 20):\n"
 
@@ -51,15 +51,15 @@ DESENHAR_CASA: nop
 	
 FOR1_DESENHAR_CASA: nop
 		addi a0, t0, 64	# pega letra no alfabeto
-		lh a1, 0(t1)	# posicao X
-		lh a2, 2(t1)	# posicao Y
+		lw a1, 0(t1)	# posicao X
+		lw a2, 4(t1)	# posicao Y
 		li a3, 0x3800   # BB GGG RRR
 		li a4, 0		# frame 0
 		li a7, 111		# print char
 		M_Ecall			# printa
 		
 		addi t0, t0, -1	# Contador--
-		addi t1, t1, 4	# proximo half
+		addi t1, t1, 8	# proximo word
 		
 		bne t0, zero, FOR1_DESENHAR_CASA
 	ret
@@ -84,15 +84,15 @@ GERAR_COORD_LOOP: bge t2, s0, GERAR_COORD_EXIT		# t2 (cont) >= s0 (qtd)
 	ecall
 	mv t3, a0				# t3 = valor aleatorio
 	remu t4, t3, t0			# t4 = t0 mod t3
-	sh t4, 0(s1)			# coord X (ncol)
+	sw t4, 0(s1)			# coord X (ncol)
 
 	li a7, 41				# rand
 	ecall
 	mv t3, a0				# t3 = valor aleatorio
 	remu t4, t3, t1			# t4 = t1 mod t3
-	sb t4, 2(s1)			# coord Y (nlin)
+	sw t4, 4(s1)			# coord Y (nlin)
 	
-	addi s1, s1, 4			# andando 2 bytes no vetor
+	addi s1, s1, 8			# andando 8 bytes no vetor
 	addi t2, t2, 1			# contador  ++
 
 	j GERAR_COORD_LOOP
