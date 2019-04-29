@@ -2,7 +2,8 @@
 
 .data
 	N: 			.word 	0
-	C:			.space 	160		# 20 casas (words)
+	C:			.space 	160		# 20 casas ( 40 words)
+	D:			.space 	1600	# 20 casas para cada casa ( 400 words )
 	pergunta: 	.string "Insira N:\n"
 	case1: 		.string "Reinsira N (N <= 20):\n"
 
@@ -18,7 +19,7 @@ MAIN: li a7, 4			# printar pergunta
 MAIN_LOOP: li a7, 5			# ler int
 	ecall					# a0 = N
 	
-	blt t0, a0, MAIN_CASE	# t0 (20) < N
+	blt t0, a0, MAIN_CASE	# if( N > 20 )
 	la t0, N
 	sw a0, 0(t0)			# salvando a0 (valor lido) em N
 	la a1, C 				# vetor de casas
@@ -28,6 +29,15 @@ MAIN_LOOP: li a7, 5			# ler int
 	la a0, N
 	la a1, C
 	jal ra, DESENHAR_CASA
+	
+	la a0, N
+	la a1, C
+	jal ra, DESENHAR_LINHAS
+	
+	la a0, N
+	la a1, C
+	la a2, D
+	jal ra, CALCULAR_DISTANCIA
 	
 	j MAIN_EXIT
 
@@ -59,11 +69,104 @@ FOR1_DESENHAR_CASA: nop
 		M_Ecall			# printa
 		
 		addi t0, t0, -1	# Contador--
-		addi t1, t1, 8	# proximo word
+		addi t1, t1, 8	# proximas 2 word ( 2 coord )
 		
 		bne t0, zero, FOR1_DESENHAR_CASA
 	ret
 ##############################
+
+### void desenhar_linhas(int quantidade_casas, int vetor_casas[], vetor distancias)
+# a0 -> N
+# a1 -> C
+# a2 -> D
+DESENHAR_LINHAS: nop
+	lw a0, 0(a0)		# carregando valor de N
+	addi t0, a0, -1		# contador i, quantidade
+	add t1, a1, zero	# vetor posicao
+	addi t2, t1, 8		# j = i+1 ( nao pega o objeto atual )
+	
+FOR1_DESENHAR_LINHAS: nop
+		lw a0, 0(t1)	# endereco X da casa atual
+		lw a1, 4(t1)	# endereco Y da casa atual
+		add t3, t0, zero# contador = i
+	FOR2_DESENHAR_LINHAS: nop
+			lw a2, 0(t2)	# endereco X da casa vizinha
+			lw a3, 4(t2)	# endereco Y da casa vizinha
+			
+			li a4, 255		# cor branca
+			li a7, 47		# ecall desenhar linha entre dois pontos
+			mv t4, a0
+			M_Ecall
+			
+			mv a0, t4
+			addi t2, t2, 8		# ligar a proxima casa
+			
+			addi t3, t3, -1		# contador--
+			bne t3, zero, FOR2_DESENHAR_LINHAS
+		addi t1, t1, 8	# proxima casa
+		addi t2, t1, 8	# proxima casa a partir da atual
+		addi t0, t0, -1	# i--
+		bne t0, zero, FOR1_DESENHAR_LINHAS
+	
+	ret
+######################
+
+### void calcular_distancia(int *quantidade_casas, int vetor_casas[], float vetor_distancias[])
+# a0 -> N
+# a1 -> C
+# a2 -> D
+CALCULAR_DISTANCIA: nop
+	lw t0, 0(a0)
+	add t1, zero, zero	# i = 0
+	addi sp, sp, -8
+	sw a2, 0(sp)
+	sw a1, 4(sp)
+	
+FOR1_CALCULAR_DISTANCIA: nop
+		lw t2, 4(sp)
+		lw t3, 0(t2)	# ci(x)
+		lw t4, 4(t2)	# ci(y)
+		
+		add t2, a1, zero# inicio do vetor
+		li t0, 0		# j = 0
+		FOR2_CALCULAR_DISTANCIA: nop
+			lw t5, 0(t2)	# cj(x)
+			lw t6, 4(t2)	# cj(y)
+			
+			sub t5, t3, t5	# ci(x) - cj(x)
+			sub t6, t4, t6	# ci(y) - cj(y)
+			
+			mul t5, t5, t5	# ( ci(x) - cj(x) )²
+			mul t6, t6, t6	# ( ci(y) - cj(y) )²
+			
+			add t5, t5, t6	# ( ci(x) - cj(x) )² + ( ci(y) - cj(y) )²
+			
+			fcvt.s.w f5, t5	# IntToFloat
+			fsqrt.s f5, f5	# raiz quadrada ( f3 )
+			
+			lw t5, 0(sp)
+			fsw f5, 0(t5)	# salvando no vetor
+			addi t5, t5, 4
+			sw t5, 0(sp)
+			
+			addi t2, t2, 8	# proxima casa ( 2 words )
+			addi t0, t0, 1	# j++
+			lw t5, 0(a0)	# t3 = N
+			bne t0, t5, FOR2_CALCULAR_DISTANCIA
+		
+		lw t2, 4(sp)
+		addi t2, t2, 8
+		sw t2, 4(sp)
+		
+		addi t1, t1, 1	# i++
+		lw t5, 0(a0)	# t3 = N
+		bne t1, t5, FOR1_CALCULAR_DISTANCIA
+		
+		addi sp, sp, 8
+	ret
+			
+
+#####################
 
 #################### void gerar_coord (int N, int C[])
 # a0 -> N (qtd de casas)
