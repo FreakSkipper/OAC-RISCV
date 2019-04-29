@@ -75,7 +75,7 @@ FOR1_DESENHAR_CASA: nop
 	ret
 ##############################
 
-### void desenhar_linhas(int quantidade_casas, int vetor_casas[], vetor distancias)
+#################### void desenhar_linhas(int quantidade_casas, int vetor_casas[], vetor distancias)
 # a0 -> N
 # a1 -> C
 # a2 -> D
@@ -109,9 +109,10 @@ FOR1_DESENHAR_LINHAS: nop
 		bne t0, zero, FOR1_DESENHAR_LINHAS
 	
 	ret
-######################
+##############################
 
-### void calcular_distancia(int *quantidade_casas, int vetor_casas[], float vetor_distancias[])
+#################### void calcular_distancia(int *quantidade_casas, int vetor_casas[], float vetor_distancias[])
+## Para cada casa em a1, vai montando D com as distancias referentes a cada casa em C
 # a0 -> N
 # a1 -> C
 # a2 -> D
@@ -136,13 +137,13 @@ FOR1_CALCULAR_DISTANCIA: nop
 			sub t5, t3, t5	# ci(x) - cj(x)
 			sub t6, t4, t6	# ci(y) - cj(y)
 			
-			mul t5, t5, t5	# ( ci(x) - cj(x) )²
-			mul t6, t6, t6	# ( ci(y) - cj(y) )²
+			mul t5, t5, t5	# ( ci(x) - cj(x) )ï¿½
+			mul t6, t6, t6	# ( ci(y) - cj(y) )ï¿½
 			
-			add t5, t5, t6	# ( ci(x) - cj(x) )² + ( ci(y) - cj(y) )²
+			add t5, t5, t6	# ( ci(x) - cj(x) )ï¿½ + ( ci(y) - cj(y) )ï¿½
 			
 			fcvt.s.w f5, t5	# IntToFloat
-			fsqrt.s f5, f5	# raiz quadrada ( f3 )
+			fsqrt.s f5, f5	# raiz quadrada ( f5 )
 			
 			lw t5, 0(sp)
 			fsw f5, 0(t5)	# salvando no vetor
@@ -151,22 +152,22 @@ FOR1_CALCULAR_DISTANCIA: nop
 			
 			addi t2, t2, 8	# proxima casa ( 2 words )
 			addi t0, t0, 1	# j++
-			lw t5, 0(a0)	# t3 = N
+			lw t5, 0(a0)	# t5 = N
 			bne t0, t5, FOR2_CALCULAR_DISTANCIA
 		
-		lw t2, 4(sp)
-		addi t2, t2, 8
-		sw t2, 4(sp)
+		lw t2, 4(sp)				# carrega C
+		addi t2, t2, 8				# avanÃ§a 1 casa
+		sw t2, 4(sp)				# guarda novo valor
 		
-		addi t1, t1, 1	# i++
-		lw t5, 0(a0)	# t3 = N
+		addi t1, t1, 1				# i++
+		lw t5, 0(a0)				# t5 = N
 		bne t1, t5, FOR1_CALCULAR_DISTANCIA
 		
 		addi sp, sp, 8
 	ret
 			
 
-#####################
+##############################
 
 #################### void gerar_coord (int N, int C[])
 # a0 -> N (qtd de casas)
