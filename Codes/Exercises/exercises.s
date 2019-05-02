@@ -30,7 +30,7 @@ C_return: .byte '\n'
 #	 -> melhor visualizacao
 # 	-comentar sempre que possivel (C like ou explicando msm)
 # 	-usar esse arquivo como moddelo :D
-MAIN: nop
+MAIN_EXERCISES: nop
 	la a0, S_hello
 	addi a7, zero, 4
 	ecall	
@@ -146,13 +146,13 @@ SORT: nop
 # Ou seja, quando eu chamar SWAP, ele poderah fazer uso livre dos regs. temporarios.
 # Por isso, eh bom armazenar nos regs. salvos (conforme a convensao) DADOS IMPORTANTES.
 # Dessa forma, se a funcao quizer utilizar os regs. salvos, ela vai ter de guardar na pilha o valor ant.
-	add s0, zero, zero			# contador i 
 	addi sp, sp, -16			# ra e a1 serao utilizados na chamada de SWAP
 	sw ra, 12(sp)				# por tanto, salvar ra.
 	sw a1, 8(sp)				# salvar tamanho vetor.
 	sw s1, 4(sp)
 	sw s0, 0(sp)
 	
+	add s0, zero, zero			# contador i 
 SORT_LOOP: nop
 	slt s1, s0, a1				# loop: (i < a1) ? 1 : 0 (s1)
 	beq s1, zero, SORT_EXIT		# se s1 == 0 (i >= a1) => SORT_EXIT

@@ -39,6 +39,11 @@ MAIN_LOOP: li a7, 5			# ler int
 	la a2, D
 	jal ra, CALCULAR_DISTANCIA
 	
+	la a0, N
+	la a1, C
+	la a2, D
+	jal ra, MENOR_CAMINHO
+	
 	j MAIN_EXIT
 
 MAIN_CASE: li a7, 4
@@ -75,7 +80,7 @@ FOR1_DESENHAR_CASA: nop
 	ret
 ##############################
 
-#################### void desenhar_linhas(int quantidade_casas, int vetor_casas[], vetor distancias)
+### void desenhar_linhas(int quantidade_casas, int vetor_casas[], vetor distancias)
 # a0 -> N
 # a1 -> C
 # a2 -> D
@@ -109,10 +114,9 @@ FOR1_DESENHAR_LINHAS: nop
 		bne t0, zero, FOR1_DESENHAR_LINHAS
 	
 	ret
-##############################
+######################
 
-#################### void calcular_distancia(int *quantidade_casas, int vetor_casas[], float vetor_distancias[])
-## Para cada casa em a1, vai montando D com as distancias referentes a cada casa em C
+### void calcular_distancia(int *quantidade_casas, int vetor_casas[], float vetor_distancias[])
 # a0 -> N
 # a1 -> C
 # a2 -> D
@@ -143,7 +147,7 @@ FOR1_CALCULAR_DISTANCIA: nop
 			add t5, t5, t6	# ( ci(x) - cj(x) )� + ( ci(y) - cj(y) )�
 			
 			fcvt.s.w f5, t5	# IntToFloat
-			fsqrt.s f5, f5	# raiz quadrada ( f5 )
+			fsqrt.s f5, f5	# raiz quadrada ( f3 )
 			
 			lw t5, 0(sp)
 			fsw f5, 0(t5)	# salvando no vetor
@@ -152,22 +156,22 @@ FOR1_CALCULAR_DISTANCIA: nop
 			
 			addi t2, t2, 8	# proxima casa ( 2 words )
 			addi t0, t0, 1	# j++
-			lw t5, 0(a0)	# t5 = N
+			lw t5, 0(a0)	# t3 = N
 			bne t0, t5, FOR2_CALCULAR_DISTANCIA
 		
-		lw t2, 4(sp)				# carrega C
-		addi t2, t2, 8				# avança 1 casa
-		sw t2, 4(sp)				# guarda novo valor
+		lw t2, 4(sp)
+		addi t2, t2, 8
+		sw t2, 4(sp)
 		
-		addi t1, t1, 1				# i++
-		lw t5, 0(a0)				# t5 = N
+		addi t1, t1, 1	# i++
+		lw t5, 0(a0)	# t3 = N
 		bne t1, t5, FOR1_CALCULAR_DISTANCIA
 		
 		addi sp, sp, 8
 	ret
 			
 
-##############################
+#####################
 
 #################### void gerar_coord (int N, int C[])
 # a0 -> N (qtd de casas)
@@ -206,6 +210,151 @@ GERAR_COORD_EXIT: lw s0, 0(sp)		# recuperando da pilha..
 	addi sp, sp, 8
 	
 	ret
+###############################
+
+#### int menor_caminho(int *quantidadeVertices, int coordenadas[], float vetorDistancias[])
+## calcular o caixeiro viajante
+# a0 -> N
+# a1 -> C
+# a2 -> D
+MENOR_CAMINHO: nop	
+	addi sp, sp, -4	# inicia pilha
+	sw s0, 0(sp)	# salva frame pointer
+	addi s0, sp, -4	# inicia frame pointer
+
+	lw t0, 0(a0)	# quantidade vertices
+	
+	addi t1, zero, 0# i = 0
+	addi t5, zero, 1# iteracoes = 1
+	
+FOR1_MENOR_CAMINHO: nop
+		addi t2, zero, 1		# j = 1
+		
+		addi t3, zero, 900		# aux = 900
+		fcvt.s.w f3, t3			# aux = 900.0
+		
+		addi t4, a2, 0			# D
+		mul t3, t0, t1			# N * i
+		slli t3, t3, 2			# N * i * 4 bytes
+		add t4, t4, t3			# linha correspondende em D
+		
+		FOR2_MENOR_CAMINHO: nop
+			addi t4, t4, 4			# coluna correspondende em D
+			
+			# verificando se valor � menor do que o menor encontrado
+			flw fa0, 0(t4)			# distancia ponto flutuante
+			flt.s t3, fa0, f3		# if ( valorAtual < aux )
+			bne t3, zero, NOVO_MENOR# se verdadeiro, aux = valor
+				
+VOLTA_NOVO_MENOR: nop
+			addi t2, t2, 1	# j++
+			lw t0, 0(a0)	# volta valor de N
+			bne t2, t0, FOR2_MENOR_CAMINHO
+			
+		addi t5, t5, 1	# iteracao++
+		addi t1, t6, 0	# i = j
+		
+		addi sp, sp, -4	# add pilha
+		sw t6, 0(sp)	# salva na pilha posicao visitada
+		
+		li t3, 0
+		fcvt.s.w f1, t3
+		fadd.s fa0, f3, f1	# mv fa0, f3
+		
+		bne t5, t0, FOR1_MENOR_CAMINHO
+	
+	###### Ordenar C
+	
+	addi t3, a1, 0	# vetor C
+	
+	lw t1, 0(s0)	# ordenado por indice	
+	slli t1, t1, 3	# multiplica p * 8
+	add t1, t3, t1	# vai na posicao exata de C a partir da pilha
+	
+	## F at� o mais proximo
+	lw a0, 0(t3)	# coord XF
+	lw a1, 4(t3)	# coord YF
+	lw a2, 0(t1)	# coord Xp
+	lw a3, 4(t1)	# coord Yp
+	li a4, 7		# cor vermelha
+	li a7, 47		# desenhar linha
+	M_Ecall
+
+	addi s0, s0, -4	# proximo indice ordenado
+WHILE2: nop
+		lw t1, 0(s0)	# ordenado por indice
+		
+		# encontrando a posicao do indice no vetor C
+		slli t1, t1, 3	# multiplica p * 8
+		add t1, t3, t1	# vai na posicao exata de C a partir da pilha
+		
+		# lendo X e Y do indice
+		lw a0, 0(t1)
+		lw a1, 4(t1)
+		
+		# encontrando a posicao do proximo indice no vetor C
+		lw t1, 4(s0)	# ordenado por indice
+		
+		slli t1, t1, 3	# multiplica p * 8
+		add t1, t3, t1	# vai na posicao exata de C a partir da pilha
+		
+		# pintar linha entre casas proximas
+		lw a2, 0(t1)
+		lw a3, 4(t1)
+		li a4, 7	# cor vermelha
+		li a7, 47
+		M_Ecall
+		
+		addi s0, s0, -4 	# proximo indice
+		bge s0, sp, WHILE2 	# if ( nao tiver finalizado de ler a pilha )
+	
+	# DESENHAR LINHA ENTRE F e o ULTIMO INDICE
+	addi s0, s0, 4	# volta ao indice anterior ( ultimo indice ordenado )
+	lw t1, 0(s0)
+	
+	# encontrar X e Y do ultimo indice no vetor C
+	slli t1, t1, 3	# multiplica p * 8
+	add t1, t3, t1	# vai na posicao exata de C a partir da pilha
+	
+	lw a0, 0(t3)
+	lw a1, 4(t3)
+	lw a2, 0(t1)
+	lw a3, 4(t1)
+	li a4, 7	# cor vermelha
+	li a7, 47	# desenha linha entre F e ultimo indice na pilha
+	M_Ecall
+	
+	# Limpando mem�ria usada
+	addi t0, t0, -1	# N - 1
+	slli t1, t0, 2	# multiplica por 4
+	add sp, sp, t1	# encerra pilha com tamanho de N - 1
+	
+	# Retornando o valor original de s0
+	lw s0, 0(sp)	# retorna o frame pointer
+	addi sp, sp, 4	# libera pilha
+	
+	# return 
+	ret
+
+NOVO_MENOR: nop
+			beq t1, t2, VOLTA_NOVO_MENOR # if ( j == i ) ignora
+			
+			mv t0, s0	# frame pointer
+			# Percorre a pilha para verificar se indice ja foi visitado
+			WHILE: nop
+				lw t3, 0(t0)					# if ( ja_visitado[j] )
+				beq t3, t2, VOLTA_NOVO_MENOR	# ignora
+				addi t0, t0, -4					# proximo indice a ser verificado na pilha
+				bge t0, sp, WHILE				# enquanto nao tiver percorrida a pilha inteira
+			
+			# movendo valor flutuante
+			li t3, 0
+			fcvt.s.w f1, t3
+			fadd.s f3, f1, fa0	# mv f3, fa0
+			
+			addi t6, t2, 0	# posicao da menor			
+			
+			jal zero, VOLTA_NOVO_MENOR
 ###############################
 
 .include "SYSTEMv13.s"
