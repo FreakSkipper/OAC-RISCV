@@ -3,6 +3,7 @@
 .data
 	N: 			.word 	0
 	C:			.space 	160		# 20 casas ( 40 words)
+	C_copy:		.space 	160		# ""
 	D:			.space 	1600	# 20 casas para cada casa ( 400 words )
 	pergunta: 	.string "Insira N:\n"
 	case1: 		.string "Reinsira N (N <= 20):\n"
@@ -212,14 +213,15 @@ GERAR_COORD_EXIT: lw s0, 0(sp)		# recuperando da pilha..
 	ret
 ###############################
 
-#### int menor_caminho(int *quantidadeVertices, int coordenadas[], float vetorDistancias[])
+#################### int menor_caminho(int *quantidadeVertices, int coordenadas[], float vetorDistancias[])
 ## calcular o caixeiro viajante
 # a0 -> N
 # a1 -> C
 # a2 -> D
 MENOR_CAMINHO: nop	
-	addi sp, sp, -4	# inicia pilha
-	sw s0, 0(sp)	# salva frame pointer
+	addi sp, sp, -8	# inicia pilha
+	sw ra, 0(sp)
+	sw s0, 4(sp)	# salva frame pointer
 	addi s0, sp, -4	# inicia frame pointer
 
 	lw t0, 0(a0)	# quantidade vertices
@@ -228,40 +230,40 @@ MENOR_CAMINHO: nop
 	addi t5, zero, 1# iteracoes = 1
 	
 FOR1_MENOR_CAMINHO: nop
-		addi t2, zero, 1		# j = 1
+	addi t2, zero, 1		# j = 1
+	
+	addi t3, zero, 900		# aux = 900
+	fcvt.s.w f3, t3			# aux = 900.0
+	
+	addi t4, a2, 0			# D
+	mul t3, t0, t1			# N * i
+	slli t3, t3, 2			# N * i * 4 bytes
+	add t4, t4, t3			# linha correspondende em D
+	
+	FOR2_MENOR_CAMINHO: nop
+		addi t4, t4, 4			# coluna correspondende em D
 		
-		addi t3, zero, 900		# aux = 900
-		fcvt.s.w f3, t3			# aux = 900.0
-		
-		addi t4, a2, 0			# D
-		mul t3, t0, t1			# N * i
-		slli t3, t3, 2			# N * i * 4 bytes
-		add t4, t4, t3			# linha correspondende em D
-		
-		FOR2_MENOR_CAMINHO: nop
-			addi t4, t4, 4			# coluna correspondende em D
-			
-			# verificando se valor � menor do que o menor encontrado
-			flw fa0, 0(t4)			# distancia ponto flutuante
-			flt.s t3, fa0, f3		# if ( valorAtual < aux )
-			bne t3, zero, NOVO_MENOR# se verdadeiro, aux = valor
+		# verificando se valor � menor do que o menor encontrado
+		flw fa0, 0(t4)			# distancia ponto flutuante
+		flt.s t3, fa0, f3		# if ( valorAtual < aux )
+		bne t3, zero, NOVO_MENOR# se verdadeiro, aux = valor
 				
 VOLTA_NOVO_MENOR: nop
-			addi t2, t2, 1	# j++
-			lw t0, 0(a0)	# volta valor de N
-			bne t2, t0, FOR2_MENOR_CAMINHO
-			
-		addi t5, t5, 1	# iteracao++
-		addi t1, t6, 0	# i = j
+	addi t2, t2, 1	# j++
+	lw t0, 0(a0)	# volta valor de N
+	bne t2, t0, FOR2_MENOR_CAMINHO
 		
-		addi sp, sp, -4	# add pilha
-		sw t6, 0(sp)	# salva na pilha posicao visitada
-		
-		li t3, 0
-		fcvt.s.w f1, t3
-		fadd.s fa0, f3, f1	# mv fa0, f3
-		
-		bne t5, t0, FOR1_MENOR_CAMINHO
+	addi t5, t5, 1	# iteracao++
+	addi t1, t6, 0	# i = j
+	
+	addi sp, sp, -4	# add pilha
+	sw t6, 0(sp)	# salva na pilha posicao visitada
+	
+	li t3, 0
+	fcvt.s.w f1, t3
+	fadd.s fa0, f3, f1	# mv fa0, f3
+	
+	bne t5, t0, FOR1_MENOR_CAMINHO
 	
 	###### Ordenar C
 	
@@ -281,7 +283,7 @@ VOLTA_NOVO_MENOR: nop
 	M_Ecall
 
 	addi s0, s0, -4	# proximo indice ordenado
-WHILE2: nop
+MENOR_WHILE2: nop
 		lw t1, 0(s0)	# ordenado por indice
 		
 		# encontrando a posicao do indice no vetor C
@@ -306,7 +308,7 @@ WHILE2: nop
 		M_Ecall
 		
 		addi s0, s0, -4 	# proximo indice
-		bge s0, sp, WHILE2 	# if ( nao tiver finalizado de ler a pilha )
+		bge s0, sp, MENOR_WHILE2 	# if ( nao tiver finalizado de ler a pilha )
 	
 	# DESENHAR LINHA ENTRE F e o ULTIMO INDICE
 	addi s0, s0, 4	# volta ao indice anterior ( ultimo indice ordenado )
@@ -324,17 +326,8 @@ WHILE2: nop
 	li a7, 47	# desenha linha entre F e ultimo indice na pilha
 	M_Ecall
 	
-	# Limpando mem�ria usada
-	addi t0, t0, -1	# N - 1
-	slli t1, t0, 2	# multiplica por 4
-	add sp, sp, t1	# encerra pilha com tamanho de N - 1
+	j MENOR_ORDENAR
 	
-	# Retornando o valor original de s0
-	lw s0, 0(sp)	# retorna o frame pointer
-	addi sp, sp, 4	# libera pilha
-	
-	# return 
-	ret
 
 NOVO_MENOR: nop
 			beq t1, t2, VOLTA_NOVO_MENOR # if ( j == i ) ignora
@@ -355,6 +348,95 @@ NOVO_MENOR: nop
 			addi t6, t2, 0	# posicao da menor			
 			
 			jal zero, VOLTA_NOVO_MENOR
-###############################
+
+
+MENOR_ORDENAR: nop
+	addi sp, sp, -8		# aumentando pilha
+	sw s1, 0(sp)		# guardando S1
+	sw s2, 4(sp)		# guardando S2
+	
+	lw s1, 0(a0)		# carregando N
+	mv t0, s0			# end. stack
+	
+	#slli s2, s1, 3		# t3 = N * 8 (2 words)
+	#add s2, s2, a1		# s2 (end. final C) = N*8 + C
+
+
+	li t2, 0			# contador ordenou
+	la t3, C
+	la t6, C_copy
+
+MENOR_ORDENAR_LOOP1: addi s1, s1, -1
+	bge t2, s1, MENOR_ORDENAR_CASE1		# t2 >= N - 1 ? fim da stack 
+	lw t1, 0(t0) 						# indice na stack
+
+	#la t3, C
+	slli t4, t1, 3						# t4 = t1 (i) * 8
+	add t3, t3, t4						# t3 = C + i*8
+	lw t4, 0(t3)						# carregando de C
+	sw t4, 0(t6)						# salvando em C_Copy
+	lw t4, 4(t3)
+	sw t4, 4(t6)
+
+	addi t0, t0, 4						# andando na stack
+	addi t6, t6, 8 						# andando em C_Copy
+	
+	addi t2, t2, 1						# contador i
+	addi s1, s1, 1 						# corrigindo valor de s1
+
+	j MENOR_ORDENAR_LOOP1
+	# MENOR_ORDENAR_LOOP2: addi s1, s1, 1
+	# bge t3, s2, MENOR_ORDENAR_CASE2		# t3 >= N ? percorreu todo o C
+	# lw t4, 0(t3)						# carregando C
+	
+# C_copy montado, copiar para C.
+MENOR_ORDENAR_CASE1: li t2, 1							# contador C, n queremos a origem
+	li t4, 0											# contador C_copy
+	MENOR_ORDENAR_CASE1_LOOP1: bge t2, s1, MENOR_ORDENAR_CASE2		# t2 (cont i) >= s1 (N) ? stop
+		la t0, C
+		slli t3, t2, 3					# t3 = i * 4
+		add t0, t0, t3					# t0 = C + i*4
+
+		la t1, C_copy
+		slli t3, t4, 3					# t3 = j * 4
+		add t1, t1, t3					# t1 = C_copy + i*4
+
+		lw t1, 0(t1)					# t1 = C_copy[j]
+		sw t1, 0(t0)					# C[i] = t1
+		lw t1, 4(t1)					
+		sw t1, 4(t0)					
+
+		addi t2, t2, 1					# i++
+		addi t4, t4, 1					# j++
+		j MENOR_ORDENAR_CASE1_LOOP1
+
+# C ordenado, refazer matriz D.
+MENOR_ORDENAR_CASE2: la a0, N
+	la a1, C
+	la a2, D
+	
+	jal CALCULAR_DISTANCIA
+
+	lw s1, 0(sp)		# carregando S1
+	lw s2, 4(sp)		# carregando S2
+	addi sp, sp, 8		# aumentando pilha
+	
+	# j MENOR_EXIT
+
+MENOR_EXIT: nop
+	# Limpando memoria usada
+	lw t0, 0(a0)	# N
+	addi t0, t0, -1	# N - 1
+	slli t1, t0, 2	# multiplica por 4
+	add sp, sp, t1	# encerra pilha com tamanho de N - 1
+	
+	# Retornando o valor original de s0
+	lw ra, 0(sp)	
+	lw s0, 4(sp)	# retorna o frame pointer
+	addi sp, sp, 8	# libera pilha
+	
+	# return 
+	ret
+##############################
 
 .include "SYSTEMv13.s"
