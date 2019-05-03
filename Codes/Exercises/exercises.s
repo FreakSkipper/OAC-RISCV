@@ -52,7 +52,7 @@ MAIN_EXERCISES: nop
 	ecall
 	la a0, I_vetor			# end. vetor
 	addi a1, zero, 10		# tam. vetor
-	jal ra, SORT			# ordena crescente
+	jal ra, SORT2			# ordena crescente
 	jal ra, PRINT
 	jal ra, RET
 	
@@ -126,7 +126,7 @@ RET: nop
 #################### SWAP
 # ao -> end. vetor (word)
 # a1 -> pos. de troca
-SWAP:	slli t0, a1, 2		# a1 * 4
+SWAP2:	slli t0, a1, 2		# a1 * 4
 		add t0, a0, t0		# end. t0 = v[k]
 		lw t1, (t0)			# t1 = v[k]
 		addi t0, t0, 4		# v[k+1]
@@ -141,7 +141,7 @@ SWAP:	slli t0, a1, 2		# a1 * 4
 #################### SORT
 # a0 -> end. vetor (word)
 # a1 -> tam. vetor
-SORT: nop
+SORT2: nop
 # (!) Eh importante lembrar que cada funcao tem acesso aos mesmos registradores e a mesma pilha
 # Ou seja, quando eu chamar SWAP, ele poderah fazer uso livre dos regs. temporarios.
 # Por isso, eh bom armazenar nos regs. salvos (conforme a convensao) DADOS IMPORTANTES.
@@ -166,7 +166,7 @@ SORT_LOOP_2: nop
 	lw t4, 4(t2)				# v[j+1]
 	blt t3, t4, SORT_LOOP_FIM	# v[j] < v[j+1] ? fim : swap
 	add a1, zero, s1			# a1 = s1 (j)
-	jal ra, SWAP				# swap(v[j], v[j+1])
+	jal ra, SWAP2				# swap(v[j], v[j+1])
 	
 	lw a1, 8(sp)				# recuperar tam. vetor
 	addi s1, s1, -1				# j--
