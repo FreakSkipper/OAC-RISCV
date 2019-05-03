@@ -355,7 +355,7 @@ MENOR_ORDENAR: nop
 	sw s1, 0(sp)		# guardando S1
 	sw s2, 4(sp)		# guardando S2
 	
-	lw s1, 0(a0)		# carregando N
+	mv s1, t0			# carregando N
 	mv t0, s0			# end. stack
 	
 	#slli s2, s1, 3		# t3 = N * 8 (2 words)
@@ -401,10 +401,10 @@ MENOR_ORDENAR_CASE1: li t2, 1							# contador C, n queremos a origem
 		slli t3, t4, 3					# t3 = j * 4
 		add t1, t1, t3					# t1 = C_copy + i*4
 
-		lw t1, 0(t1)					# t1 = C_copy[j]
-		sw t1, 0(t0)					# C[i] = t1
-		lw t1, 4(t1)					
-		sw t1, 4(t0)					
+		lw t5, 0(t1)					# t1 = C_copy[j]
+		sw t5, 0(t0)					# C[i] = t1
+		lw t5, 4(t1)					
+		sw t5, 4(t0)					
 
 		addi t2, t2, 1					# i++
 		addi t4, t4, 1					# j++
