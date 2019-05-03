@@ -358,6 +358,10 @@ MENOR_ORDENAR: nop
 	mv s1, t0			# carregando N
 	mv t0, s0			# end. stack
 	
+	addi t1, s1, -2 	# N - 2 (tira origem, começa de 0)
+	slli t1, t1, 2		# (N-2)*4
+	add t0, t0, t1		# final da pilha (topo)
+
 	#slli s2, s1, 3		# t3 = N * 8 (2 words)
 	#add s2, s2, a1		# s2 (end. final C) = N*8 + C
 
@@ -378,7 +382,7 @@ MENOR_ORDENAR_LOOP1: addi s1, s1, -1
 	lw t4, 4(t3)
 	sw t4, 4(t6)
 
-	addi t0, t0, 4						# andando na stack
+	addi t0, t0, -4						# andando na stack (pop)
 	addi t6, t6, 8 						# andando em C_Copy
 	
 	addi t2, t2, 1						# contador i

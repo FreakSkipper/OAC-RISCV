@@ -1,6 +1,7 @@
 .data
 V: .word 100,90,80,70,60,50,40,30,10,9,8,7,6,5,4,3,2,1,0
 N: .word 19
+
 .text
 MAIN: la a0, V
 	la a1, N
@@ -18,11 +19,11 @@ MAIN: la a0, V
 	ecall
 	
 SWAP: slli a1, a1, 2
-	add a0, a0, a1
-	flw ft0, 0(a0)
-	flw ft1, 4(a0)
-	fsw ft0, 4(a0)
-	fsw ft1, 0(a0)
+	add t2, a0, a1
+	flw ft0, 0(t2)
+	flw ft1, 4(t2)
+	fsw ft0, 4(t2)
+	fsw ft1, 0(t2)
 	ret
 	
 SORT: addi sp, sp, -12
