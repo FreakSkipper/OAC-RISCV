@@ -1,99 +1,66 @@
 .include "macros2.s"
 
 .data
-	N: 					.word 	0
-	C:					.space 	160		# 20 casas ( 40 words)
-	C_copy:				.space 	160		# ""
-	D:					.space 	1600	# 20 casas para cada casa ( 400 words )
-	pergunta: 			.string "Insira N:\n"
-	msg_vetor:			.string "Vetor C ordenado:\n"
-	msg_matriz: 		.string "Matriz de distancias ordenada:\n"
-	case1: 				.string "Reinsira N (N <= 20):\n"
+	N: .word 6
+	C: .word 31, 71, 264, 89, 193, 32, 55, 174, 183, 228, 188, 48
+	C_copy:		.space 	160		# ""
+	D: .space 1600
 
 .text
-	M_SetEcall(exceptionHandling)
-#################### MAIN
-MAIN: li a7, 4			# printar pergunta
-	la a0, pergunta
-	ecall
-	
-	li t0, 20			# valor limite de N
-
-MAIN_LOOP: li a7, 5			# ler int
-	ecall					# a0 = N
-	
-	blt t0, a0, MAIN_CASE	# if( N > 20 )
-	la t0, N
-	sw a0, 0(t0)			# salvando a0 (valor lido) em N
-	la a1, C 				# vetor de casas
-
-	jal ra, GERAR_COORD
+	M_SetEcall(exceptionHandling)	
+MAIN: nop
 
 	la a0, N
+	lw a0, 0(a0)
 	la a1, C
 	jal ra, DESENHAR_CASA
-	
+
 	la a0, N
 	la a1, C
 	jal ra, DESENHAR_LINHAS
-
-	# la a0, N
-	# la a1, C
-	# jal ra, PRINTAR_VETOR
-
-	# la a0, N
-	# la a1, C_copy
-	# jal ra, PRINTAR_VETOR
 	
 	la a0, N
 	la a1, C
 	la a2, D
 	jal ra, CALCULAR_DISTANCIA
+
+	la a0, N
+	la a1, C
+	jal ra, PRINTAR_VETOR
+
+	la a0, N
+	la a1, C_copy
+	jal ra, PRINTAR_VETOR
+
+	la a0, N
+	la a1, D
+	jal ra, PRINTAR_MATRIZ
 	
 	la a0, N
 	la a1, C
 	la a2, D
 	jal ra, MENOR_CAMINHO
 	
-	li a7, 11
-	li a0, '\n'
-	ecall
-	
-	li a7, 4			# printar msg
-	la a0, msg_matriz
-	ecall
-	la a0, N
-	la a1, D
-	jal ra, PRINTAR_MATRIZ
-	
-	li a7, 4			# printar msg
-	la a0, msg_vetor
-	ecall
 	la a0, N
 	la a1, C
 	jal ra, PRINTAR_VETOR
 
-	# la a0, N
-	# la a1, C_copy
-	# jal ra, PRINTAR_VETOR
+	la a0, N
+	la a1, C_copy
+	jal ra, PRINTAR_VETOR
 
-	j MAIN_EXIT
-
-MAIN_CASE: li a7, 4
-	la a0, case1
+	la a0, N
+	la a1, D
+	jal ra, PRINTAR_MATRIZ
+		
+	li a7, 10
 	ecall
-	
-	j MAIN_LOOP
+####################
 
-MAIN_EXIT: li a7, 10
-	ecall
-##############################
-
-#################### void desenhar_casa(int quantidade_casas, int vetor_casas[])
-# a0 -> N
-# a1 -> C
+### void desenhar_casa(int quantidade_casas, int vetor_casas[])
+# a0 -> quantidade
+# a1 -> as posicoes
 DESENHAR_CASA: nop
-	lw a0, 0(a0)		# carregando valor de N
 	add t0, a0, zero	# contador
 	add t1, a1, zero	# vetor
 	
@@ -111,12 +78,10 @@ FOR1_DESENHAR_CASA: nop
 		
 		bne t0, zero, FOR1_DESENHAR_CASA
 	ret
-##############################
-
-### void desenhar_linhas(int quantidade_casas, int vetor_casas[], vetor distancias)
+####################
+### void desenhar_linhas(int quantidade_casas, int vetor_casas[])
 # a0 -> N
 # a1 -> C
-# a2 -> D
 DESENHAR_LINHAS: nop
 	lw a0, 0(a0)		# carregando valor de N
 	addi t0, a0, -1		# contador i, quantidade
@@ -131,7 +96,7 @@ FOR1_DESENHAR_LINHAS: nop
 			lw a2, 0(t2)	# endereco X da casa vizinha
 			lw a3, 4(t2)	# endereco Y da casa vizinha
 			
-			li a4, 255		# cor branca
+			li a4, 7		# cor vermelha
 			li a7, 47		# ecall desenhar linha entre dois pontos
 			mv t4, a0
 			M_Ecall
@@ -202,47 +167,6 @@ FOR1_CALCULAR_DISTANCIA: nop
 		
 		addi sp, sp, 8
 	ret
-			
-
-#####################
-
-#################### void gerar_coord (int N, int C[])
-# a0 -> N (qtd de casas)
-# a1 -> C (end. do vetor onde serao armazenados os coord)
-GERAR_COORD: li t0, 310		# ncol
-	li t1, 230				# nlin
-	li t2, 0				# contador
-	
-	addi sp, sp, -8			# salvando na pilha...
-	sw s0, 0(sp)
-	sw s1, 4(sp)
-	
-	mv s0, a0
-	mv s1, a1
-	
-GERAR_COORD_LOOP: bge t2, s0, GERAR_COORD_EXIT		# t2 (cont) >= s0 (qtd) 
-	li a7, 41				# rand
-	ecall
-	mv t3, a0				# t3 = valor aleatorio
-	remu t4, t3, t0			# t4 = t0 mod t3
-	sw t4, 0(s1)			# coord X (ncol)
-
-	li a7, 41				# rand
-	ecall
-	mv t3, a0				# t3 = valor aleatorio
-	remu t4, t3, t1			# t4 = t1 mod t3
-	sw t4, 4(s1)			# coord Y (nlin)
-	
-	addi s1, s1, 8			# andando 8 bytes no vetor
-	addi t2, t2, 1			# contador  ++
-
-	j GERAR_COORD_LOOP
-
-GERAR_COORD_EXIT: lw s0, 0(sp)		# recuperando da pilha..
-	lw s1, 4(sp)
-	addi sp, sp, 8
-	
-	ret
 ###############################
 
 #################### int menor_caminho(int *quantidadeVertices, int coordenadas[], float vetorDistancias[])
@@ -275,7 +199,7 @@ FOR1_MENOR_CAMINHO: nop
 	FOR2_MENOR_CAMINHO: nop
 		addi t4, t4, 4			# coluna correspondende em D
 		
-		# verificando se valor � menor do que o menor encontrado
+		# verificando se valor ? menor do que o menor encontrado
 		flw fa0, 0(t4)			# distancia ponto flutuante
 		flt.s t3, fa0, f3		# if ( valorAtual < aux )
 		bne t3, zero, NOVO_MENOR# se verdadeiro, aux = valor
@@ -305,7 +229,7 @@ VOLTA_NOVO_MENOR: nop
 	slli t1, t1, 3	# multiplica p * 8
 	add t1, t3, t1	# vai na posicao exata de C a partir da pilha
 	
-	## F at� o mais proximo
+	## F at? o mais proximo
 	lw a0, 0(t3)	# coord XF
 	lw a1, 4(t3)	# coord YF
 	lw a2, 0(t1)	# coord Xp
@@ -393,6 +317,7 @@ MENOR_ORDENAR: nop
 	addi t1, s1, -2 	# N - 2 (tira origem, come�a de 0)
 	slli t1, t1, 2		# (N-2)*4
 	add t0, t0, t1		# final da pilha (topo)
+
 	#slli s2, s1, 3		# t3 = N * 8 (2 words)
 	#add s2, s2, a1		# s2 (end. final C) = N*8 + C
 
@@ -413,7 +338,7 @@ MENOR_ORDENAR_LOOP1: addi s1, s1, -1
 	lw t4, 4(t3)
 	sw t4, 4(t6)
 
-	addi t0, t0, -4						# andando na stack
+	addi t0, t0, -4						# andando na stack (pop)
 	addi t6, t6, 8 						# andando em C_Copy
 	
 	addi t2, t2, 1						# contador i
@@ -427,8 +352,8 @@ MENOR_ORDENAR_LOOP1: addi s1, s1, -1
 # C_copy montado, copiar para C.
 MENOR_ORDENAR_CASE1: li t2, 1							# contador C, n queremos a origem
 	li t4, 0											# contador C_copy
-	addi s1, s1, 1
-	MENOR_ORDENAR_CASE1_LOOP1: bge t2, s1, MENOR_ORDENAR_CASE2		# t2 (cont i) >= s1 (N) ? stop
+	addi s1, s1, -1
+	MENOR_ORDENAR_CASE1_LOOP1: bge t2, s1, MENOR_ORDENAR_CASE2		# t2 (cont i) >= s1 (N-1) ? stop
 		la t0, C
 		slli t3, t2, 3					# t3 = i * 4
 		add t0, t0, t3					# t0 = C + i*4
@@ -475,7 +400,8 @@ MENOR_EXIT: nop
 	ret
 ##############################
 
-#################### void printar_vetor(int N, int vetor[])
+
+### void printar_vetor(int N, int vetor[])
 # a0 -> quantidade
 # a1 -> matriz D
 PRINTAR_VETOR: nop
@@ -500,14 +426,11 @@ FOR2: nop
 		
 		addi t1, t1, 8
 		addi t0, t0, -1
-		bne t0, zero, FOR2
-	li a0, '\n'
-	li a7, 11
-	ecall
+		bne t0, zero, FOR2	
 	ret
-##############################
+####################
 
-#################### void printar_matriz(int N, float matriz[][])
+### void printar_matriz(int N, float matriz[][])
 # a0 -> quantidade
 # a1 -> matriz D
 PRINTAR_MATRIZ: nop
@@ -532,7 +455,8 @@ FOR: nop
 		beq t2, zero, QUEBRA_LINHA
 	VOLTA_FOR:
 		bne t0, zero, FOR
-		jal zero, EXIT_FOR
+		jal EXIT_FOR
+
 QUEBRA_LINHA: nop
 	li a0, '\n'
 	li a7, 11
@@ -540,10 +464,7 @@ QUEBRA_LINHA: nop
 	la t2, N
 	lw t2,0(t2)
 	jal zero, VOLTA_FOR
-EXIT_FOR:li a0, '\n'
-	li a7, 11
-	ecall
-	#jal ra, VOLTA_PRINTAR_MATRIZ
-	ret
+
+EXIT_FOR: ret
 ##############################
 .include "SYSTEMv13.s"
