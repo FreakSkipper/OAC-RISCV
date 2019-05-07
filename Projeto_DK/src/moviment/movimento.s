@@ -14,7 +14,7 @@
 
 	# Objetos[20]
 	# 20 x 7 = 140
-	Objetos: .word 	barril,144,0,0,12,4,1,0,144,0,120,12,4,1,0,0,0,0,0,0,0,
+	Objetos: .word 	barril,144,0,0,12,4,1,barril,144,0,120,12,4,1,barril,144,68,0,12,4,1,
 					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -26,27 +26,18 @@
 .text
 
 MAIN: nop
+	addi sp, sp, -4
+	sw ra, 0(sp)
+	
 	jal ra, CRIAR_MAPA
-	
-WHILE1_MAIN: nop
-	li a7, 4 # mostrar uma string
-	la a0, mensagem
-	ecall
-
-	li a7, 5 # ler inteiro do teclado
-	ecall
-	
-	beq a0, zero, FORA_WHILE1_MAIN # if ( num != 0 )
 
 	la a0, Objetos 			# vetor contendo objetos
 	li a1, 140				# tamanho do vetor
 	jal ra, MOVER_OBJETOS 	# move todos os objetos no vetor
-	
-	jal zero, WHILE1_MAIN
 
-FORA_WHILE1_MAIN:
-	addi a7, zero, 10 # encerra o programa
-	ecall
+	lw ra, 0(sp)
+	addi sp, sp, 4
+	ret
 ##############################
 
 #################### void cria_mapa()
