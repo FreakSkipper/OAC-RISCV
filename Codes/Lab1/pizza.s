@@ -22,20 +22,21 @@ MAIN: li a7, 4			# printar pergunta
 MAIN_LOOP: li a7, 5			# ler int
 	ecall					# a0 = N
 	
-	blt t0, a0, MAIN_CASE	# if( N > 20 )
+	blt t0, a0, MAIN_CASE	# if ( 20 < N )
+	bge zero, a0, MAIN_CASE	# if ( 0 >= N )
 	la t0, N
 	sw a0, 0(t0)			# salvando a0 (valor lido) em N
 	la a1, C 				# vetor de casas
 
-	jal ra, GERAR_COORD
+	jal ra, SORTEIO
 
 	la a0, N
 	la a1, C
-	jal ra, DESENHAR_CASA
+	jal ra, DESENHA
 	
-	la a0, N
+	la a0, N	
 	la a1, C
-	jal ra, DESENHAR_LINHAS
+	jal ra, ROTAS
 
 	# la a0, N
 	# la a1, C
@@ -53,8 +54,8 @@ MAIN_LOOP: li a7, 5			# ler int
 	la a0, N
 	la a1, C
 	la a2, D
-	jal ra, MENOR_CAMINHO
-	
+	jal ra, ORDENA
+
 	li a7, 11
 	li a0, '\n'
 	ecall
@@ -92,7 +93,7 @@ MAIN_EXIT: li a7, 10
 #################### void desenhar_casa(int quantidade_casas, int vetor_casas[])
 # a0 -> N
 # a1 -> C
-DESENHAR_CASA: nop
+DESENHA: nop
 	lw a0, 0(a0)		# carregando valor de N
 	add t0, a0, zero	# contador
 	add t1, a1, zero	# vetor
@@ -117,8 +118,13 @@ FOR1_DESENHAR_CASA: nop
 # a0 -> N
 # a1 -> C
 # a2 -> D
-DESENHAR_LINHAS: nop
+ROTAS: nop
 	lw a0, 0(a0)		# carregando valor de N
+	li t0, 2
+	bge a0, t0, CONTINUAR_DESENHAR_LINHAS
+	ret
+	
+CONTINUAR_DESENHAR_LINHAS: nop
 	addi t0, a0, -1		# contador i, quantidade
 	add t1, a1, zero	# vetor posicao
 	addi t2, t1, 8		# j = i+1 ( nao pega o objeto atual )
@@ -174,10 +180,10 @@ FOR1_CALCULAR_DISTANCIA: nop
 			sub t5, t3, t5	# ci(x) - cj(x)
 			sub t6, t4, t6	# ci(y) - cj(y)
 			
-			mul t5, t5, t5	# ( ci(x) - cj(x) )�
-			mul t6, t6, t6	# ( ci(y) - cj(y) )�
+			mul t5, t5, t5	# ( ci(x) - cj(x) )?
+			mul t6, t6, t6	# ( ci(y) - cj(y) )?
 			
-			add t5, t5, t6	# ( ci(x) - cj(x) )� + ( ci(y) - cj(y) )�
+			add t5, t5, t6	# ( ci(x) - cj(x) )? + ( ci(y) - cj(y) )?
 			
 			fcvt.s.w f5, t5	# IntToFloat
 			fsqrt.s f5, f5	# raiz quadrada ( f3 )
@@ -209,7 +215,7 @@ FOR1_CALCULAR_DISTANCIA: nop
 #################### void gerar_coord (int N, int C[])
 # a0 -> N (qtd de casas)
 # a1 -> C (end. do vetor onde serao armazenados os coord)
-GERAR_COORD: li t0, 310		# ncol
+SORTEIO: li t0, 310		# ncol
 	li t1, 230				# nlin
 	li t2, 0				# contador
 	
@@ -250,13 +256,16 @@ GERAR_COORD_EXIT: lw s0, 0(sp)		# recuperando da pilha..
 # a0 -> N
 # a1 -> C
 # a2 -> D
-MENOR_CAMINHO: nop	
+ORDENA: nop
+	lw t0, 0(a0)	# quantidade vertices
+	li t1, 2
+	bge t0, t1, CONTINUAR_MENOR_CAMINHO
+	ret
+CONTINUAR_MENOR_CAMINHO: nop
 	addi sp, sp, -8	# inicia pilha
 	sw ra, 0(sp)
 	sw s0, 4(sp)	# salva frame pointer
 	addi s0, sp, -4	# inicia frame pointer
-
-	lw t0, 0(a0)	# quantidade vertices
 	
 	addi t1, zero, 0# i = 0
 	addi t5, zero, 1# iteracoes = 1
@@ -275,7 +284,7 @@ FOR1_MENOR_CAMINHO: nop
 	FOR2_MENOR_CAMINHO: nop
 		addi t4, t4, 4			# coluna correspondende em D
 		
-		# verificando se valor � menor do que o menor encontrado
+		# verificando se valor ? menor do que o menor encontrado
 		flw fa0, 0(t4)			# distancia ponto flutuante
 		flt.s t3, fa0, f3		# if ( valorAtual < aux )
 		bne t3, zero, NOVO_MENOR# se verdadeiro, aux = valor
@@ -305,7 +314,11 @@ VOLTA_NOVO_MENOR: nop
 	slli t1, t1, 3	# multiplica p * 8
 	add t1, t3, t1	# vai na posicao exata de C a partir da pilha
 	
-	## F at� o mais proximo
+	li a7, 32
+	li a0, 500
+	ecall
+	
+	## F at? o mais proximo
 	lw a0, 0(t3)	# coord XF
 	lw a1, 4(t3)	# coord YF
 	lw a2, 0(t1)	# coord Xp
@@ -313,9 +326,19 @@ VOLTA_NOVO_MENOR: nop
 	li a4, 7		# cor vermelha
 	li a7, 47		# desenhar linha
 	M_Ecall
-
+	
+	la a0, N
+	lw a0, 0(a0)
+	li t2, 2
+	
+	beq a0, t2, MENOR_ORDENAR
+	
 	addi s0, s0, -4	# proximo indice ordenado
 MENOR_WHILE2: nop
+		li a7, 32
+		li a0, 500
+		ecall
+		
 		lw t1, 0(s0)	# ordenado por indice
 		
 		# encontrando a posicao do indice no vetor C
@@ -349,6 +372,10 @@ MENOR_WHILE2: nop
 	# encontrar X e Y do ultimo indice no vetor C
 	slli t1, t1, 3	# multiplica p * 8
 	add t1, t3, t1	# vai na posicao exata de C a partir da pilha
+	
+	li a7, 32
+	li a0, 500
+	ecall
 	
 	lw a0, 0(t3)
 	lw a1, 4(t3)
@@ -390,7 +417,7 @@ MENOR_ORDENAR: nop
 	mv s1, t0			# carregando N
 	mv t0, s0			# end. stack
 	
-	addi t1, s1, -2 	# N - 2 (tira origem, come�a de 0)
+	addi t1, s1, -2 	# N - 2 (tira origem, come?a de 0)
 	slli t1, t1, 2		# (N-2)*4
 	add t0, t0, t1		# final da pilha (topo)
 	#slli s2, s1, 3		# t3 = N * 8 (2 words)

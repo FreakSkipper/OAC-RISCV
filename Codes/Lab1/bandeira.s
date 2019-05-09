@@ -2,10 +2,8 @@
 .eqv DISP_END 0xff012C00
 
 .data
-.include "..\..\Imagens\brasil.s"
-.include "..\..\Imagens\botafogo.s"
-.include "..\..\Imagens\quadrado7.s"
-.include "..\..\Imagens\imagempeqconv.s"
+.include "../../Imagens/brasil.s"
+.include "../../Imagens/botafogo.s"
 .text
 MAIN: 	la a0, brasil
 		jal PRINTA
