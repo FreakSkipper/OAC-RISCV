@@ -1,0 +1,179 @@
+.data
+
+.LC0:
+  .word 5
+  .word 8
+  .word 3
+  .word 4
+  .word 7
+  .word 6
+  .word 8
+  .word 0
+  .word 1
+  .word 9
+	
+.LC1:
+  .string "%d\t"
+
+.text  
+jal zero,main
+show:
+  addi sp,sp,-48
+  sw ra,44(sp)
+  sw s0,40(sp)
+  addi s0,sp,48
+  sw a0,-36(s0)
+  sw a1,-40(s0)
+  sw zero,-20(s0)
+.L3:
+  lw a4,-20(s0)		# carrega zero em a4
+  lw a5,-40(s0)		#carrega o tamanho do vetor em a5
+  bge a4,a5,.L2
+  lw a5,-20(s0)		# coloca zero em a5
+  slli a5,a5,2		# 0 x 2 ?
+  lw a4,-36(s0)		# a4 recebe o endereço inicial do vetor
+  add a5,a4,a5		# a5 recebe posição do vetor
+  lw a5,0(a5)		# carrega o elemento daquela posição em a5
+  mv a0,a5		# coloca o elemento em a1 /// MUDEI PARA A0 PARA FAZER O PRINT INT
+# lui a5,%hi(.LC1)
+# addi a0,a5,%lo(.LC1)
+# call printf
+  addi a7,zero, 1	# colocar o 1 no a7
+  ecall			#print int
+  addi a7,zero,11	#a7 = 11 
+  addi a0,zero,'\t'	#a0 = '\t'
+  ecall			#print char   
+  lw a5,-20(s0)
+  addi a5,a5,1
+  sw a5,-20(s0)
+  j .L3
+.L2:
+  li a0,10
+  #call putchar
+  addi a7, zero, 11	# a7 recebe 11
+  mv t1,a0		# coloca a0 em t1
+  addi a0, zero, '\n'	# a0 = "\n"
+  ecall			# print char
+  mv a0,t1		# coloca t1 em a0
+  nop
+  lw ra,44(sp)
+  lw s0,40(sp)
+  addi sp,sp,48
+  jr ra
+swap:
+  addi sp,sp,-48	#
+  sw s0,44(sp)		
+  addi s0,sp,48
+  sw a0,-36(s0)		# salva o endereço inicial do vetor
+  sw a1,-40(s0)		# 
+  lw a5,-40(s0)		# a5 = a1
+  slli a5,a5,2		# a5 = a5 * 2
+  lw a4,-36(s0)		# a4 = endereço inicial do vetor 
+  add a5,a4,a5		# a5 = endereço do elemento 
+  lw a5,0(a5)		# a5 = elemento
+  sw a5,-20(s0)		# salva o elemento
+  lw a5,-40(s0)		# carregaa a5 = a1
+  addi a5,a5,1		# a5 = a5 + 1
+  slli a5,a5,2		# a5 = a5 * 2
+  lw a4,-36(s0)		# a4 = endereço inicial de vetor
+  add a4,a4,a5		# a4 = endereço do elemento 
+  lw a5,-40(s0)		# a5 = a1
+  slli a5,a5,2		# a5 = a5 * 2
+  lw a3,-36(s0)		# a3 = endereço inicial do vetor
+  add a5,a3,a5		# a5 = endereço do proximo elemento
+  lw a4,0(a4)		# a4 = proximo elemento 
+  sw a4,0(a5)		# salva o elemento no lugar do proximo 
+  lw a5,-40(s0)		# a5 = a1
+  addi a5,a5,1		# a5 =+ 1
+  slli a5,a5,2		# a5 =* 2
+  lw a4,-36(s0)		# a4 = endereço inicial do vetor
+  add a5,a4,a5		# a5 = endereço do elemento
+  lw a4,-20(s0)		# a4 = carrega elemento
+  sw a4,0(a5)		# salva o elemento
+  nop
+  lw s0,44(sp)		
+  addi sp,sp,48
+  jr ra
+sort:
+  addi sp,sp,-48
+  sw ra,44(sp)
+  sw s0,40(sp)
+  addi s0,sp,48
+  sw a0,-36(s0)		#salva o endereço de inicio do vetor
+  sw a1,-40(s0)		# salva o tamanho do vetor
+  sw zero,-20(s0)	# salva zero
+.L9:
+  lw a4,-20(s0)		#a4 = 0
+  lw a5,-40(s0)		#a5 = tamanho do vetor
+  bge a4,a5,.L10	#a4 >= a5 ?
+  lw a5,-20(s0)		# a5 = 0
+  addi a5,a5,-1		# a5 = a5 - 1
+  sw a5,-24(s0)		# salva a5
+.L8:
+  lw a5,-24(s0)
+  bltz a5,.L7		# a5 < 0 ?
+  lw a5,-24(s0)		#
+  slli a5,a5,2		# a5 = a5 * 2
+  lw a4,-36(s0)		# a4 = endereço inicial do vetor
+  add a5,a4,a5		# a5 = posição do elemento
+  lw a4,0(a5)		# a4 = elemento
+  lw a5,-24(s0)		# carrega o indice antigo em a5
+  addi a5,a5,1		# a5 = a5 + 1
+  slli a5,a5,2		# a5 = a5 * 2
+  lw a3,-36(s0)		# a3 = inicio do vetor
+  add a5,a3,a5		# a5 = endereço posição do elemento no vetor
+  lw a5,0(a5)		# a5 = elemento
+  ble a4,a5,.L7		# a4 <= a5 ?
+  lw a1,-24(s0)		
+  lw a0,-36(s0)		# a0 = endereço inicial do vetor
+  call swap
+  lw a5,-24(s0)
+  addi a5,a5,-1
+  sw a5,-24(s0)
+  j .L8
+.L7:
+  lw a5,-20(s0)
+  addi a5,a5,1
+  sw a5,-20(s0)
+  j .L9
+.L10:
+  nop
+  lw ra,44(sp)
+  lw s0,40(sp)
+  addi sp,sp,48
+  jr ra
+  
+main:
+  addi sp,sp,-64
+  sw ra,60(sp)
+  sw s0,56(sp)
+  addi s0,sp,64
+  lui a5,%hi(.LC0)
+  addi a4,s0,-56
+  addi a5,a5,%lo(.LC0)		#coloca o endereço do vetor em a5
+  li a3,40			# a3 = 40
+  mv a2,a3			# a2 = 40
+  mv a1,a5			# a1 = endereço inicial do vetor
+  mv a0,a1			# a0 se torna o endereço de destino 	/// agora passa o endereço que ja temos do vetor em a1
+  #call memcpy    que diabo eh memcpy mano?    deveria copiar o vetor de a1 para a0, considerando um tamanho de 40 bytes
+  #addi a5,s0,-56		# a5 recebe o endereço aonde esta o vetor na memoria /// o vetor nao estará nessa posição 
+  mv t0,a1
+  li a1,10			# a1 recebe o 10, tamanho do vetor
+  #mv a0,a5			# a0 recebe o endereço onde está o vetor  /// tirei pois mandarei o vetor a partir de a1
+  call show
+  #addi a5,s0,-56		# a5 = endereço inicial do vetor /// desnecessario pois o vetor nao estará aí
+  li a1,10			# 
+  mv a0,t0
+  call sort
+  #addi a5,s0,-56
+  li a1,10
+  mv a0,t0
+  call show
+  li a5,0
+  mv a0,a5
+  lw ra,60(sp)
+  lw s0,56(sp)
+  addi sp,sp,64
+  #jr ra
+  addi a7, zero,10	#a7 = 10
+  ecall			#exit

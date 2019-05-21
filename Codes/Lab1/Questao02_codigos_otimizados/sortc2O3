@@ -1,0 +1,115 @@
+.data
+ .LANCHOR0:
+  .word 5, 8, 3, 4, 7, 6, 8, 0, 1, 9 
+ .LC1:
+  .string "%d\t"
+
+.text
+jal zero, main  
+show:
+  blez a1,.L6		# a1 <= 0 ?
+  addi sp,sp,-16	
+  sw s1,4(sp)		
+  slli s1,a1,2		# s1 = a1 * 4
+  sw s0,8(sp)		
+  sw s2,0(sp)
+  sw ra,12(sp)		
+  mv s0,a0		# s0 = endereço inicial do vetor
+  add s1,a0,s1		# s1 = alguma posição do vetor baseado em a1 * 4
+  #lui s2,%hi(.LC1)
+.L3:
+  lw a0,0(s0)	
+  #addi a0,s2,%lo(.LC1)
+  addi s0,s0,4		# s0 = endereço do proximo elemento a ser printado
+  #call printf
+  addi a7,zero, 1	# colocar o 1 no a7
+  ecall			#print int
+  addi a7,zero,11	#a7 = 11 
+  addi a0,zero,'\t'	#a0 = '\t'
+  ecall			#print char 
+  bne s1,s0,.L3		# s1 != s0 ?
+  lw s0,8(sp)		
+  lw ra,12(sp)
+  lw s1,4(sp)
+  lw s2,0(sp)
+  li a0,10
+  addi sp,sp,16
+  #tail putchar
+.L6:
+  li a0,10
+  #tail putchar
+  addi a7, zero, 11	# a7 recebe 11
+  mv t0,a0		# coloca a0 em t0
+  addi a0, zero, '\n'	# a0 = "\n"
+  ecall			# print char
+  mv a0,t0		# coloca t0 em a0
+  ret
+swap:
+  slli a1,a1,2
+  addi a5,a1,4
+  add a5,a0,a5
+  lw a3,0(a5)
+  add a0,a0,a1
+  lw a4,0(a0)
+  sw a3,0(a0)
+  sw a4,0(a5)
+  ret
+sort:
+  blez a1,.L11
+  li a7,0
+  addi t3,a1,-1
+  li a6,-1
+  mv a5,a7
+  beq a7,t3,.L11
+.L20:
+  lw a4,0(a0)
+  lw a1,4(a0)
+  addi t1,a0,4
+  mv a3,t1
+  mv a2,a0
+  bgt a4,a1,.L15
+  j .L16
+.L19:
+  lw a4,-4(a2)
+  addi a0,a0,-4
+  addi a2,a2,-4
+  addi a3,a3,-4
+  ble a4,a1,.L16
+.L15:
+  sw a1,0(a0)
+  sw a4,0(a3)
+  addi a5,a5,-1
+  bne a5,a6,.L19
+.L16:
+  addi a7,a7,1
+  mv a0,t1
+  mv a5,a7
+  bne a7,t3,.L20
+.L11:
+  ret
+main:
+  addi sp,sp,-64
+  lui a1,%hi(.LANCHOR0)
+  li a2,40
+  addi a0,a1,%lo(.LANCHOR0)	# a0 = endereço inicial do vetor
+  #addi a0,sp,8
+  mv t6,a0
+  sw ra,60(sp)
+  #call memcpy
+  #addi a0,sp,8
+  li a1,10		# a1=10
+  call show
+  mv a0,t6
+  #addi a0,sp,8
+  li a1,10
+  call sort
+  mv a0,t6
+  #addi a0,sp,8
+  li a1,10
+  call show
+  lw ra,60(sp)
+  li a0,0
+  addi sp,sp,64
+  #jr ra
+  addi a7, zero,10	#a7 = 10
+  ecall			#exit

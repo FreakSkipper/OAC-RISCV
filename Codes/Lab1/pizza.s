@@ -28,15 +28,15 @@ MAIN_LOOP: li a7, 5			# ler int
 	sw a0, 0(t0)			# salvando a0 (valor lido) em N
 	la a1, C 				# vetor de casas
 
-	jal ra, GERAR_COORD
+	jal ra, SORTEIO
 
 	la a0, N
 	la a1, C
-	jal ra, DESENHAR_CASA
+	jal ra, DESENHA
 	
 	la a0, N	
 	la a1, C
-	jal ra, DESENHAR_LINHAS
+	jal ra, ROTAS
 
 	# la a0, N
 	# la a1, C
@@ -54,7 +54,7 @@ MAIN_LOOP: li a7, 5			# ler int
 	la a0, N
 	la a1, C
 	la a2, D
-	jal ra, MENOR_CAMINHO
+	jal ra, ORDENA
 
 	li a7, 11
 	li a0, '\n'
@@ -93,7 +93,7 @@ MAIN_EXIT: li a7, 10
 #################### void desenhar_casa(int quantidade_casas, int vetor_casas[])
 # a0 -> N
 # a1 -> C
-DESENHAR_CASA: nop
+DESENHA: nop
 	lw a0, 0(a0)		# carregando valor de N
 	add t0, a0, zero	# contador
 	add t1, a1, zero	# vetor
@@ -118,7 +118,7 @@ FOR1_DESENHAR_CASA: nop
 # a0 -> N
 # a1 -> C
 # a2 -> D
-DESENHAR_LINHAS: nop
+ROTAS: nop
 	lw a0, 0(a0)		# carregando valor de N
 	li t0, 2
 	bge a0, t0, CONTINUAR_DESENHAR_LINHAS
@@ -215,7 +215,7 @@ FOR1_CALCULAR_DISTANCIA: nop
 #################### void gerar_coord (int N, int C[])
 # a0 -> N (qtd de casas)
 # a1 -> C (end. do vetor onde serao armazenados os coord)
-GERAR_COORD: li t0, 310		# ncol
+SORTEIO: li t0, 310		# ncol
 	li t1, 230				# nlin
 	li t2, 0				# contador
 	
@@ -256,7 +256,7 @@ GERAR_COORD_EXIT: lw s0, 0(sp)		# recuperando da pilha..
 # a0 -> N
 # a1 -> C
 # a2 -> D
-MENOR_CAMINHO: nop
+ORDENA: nop
 	lw t0, 0(a0)	# quantidade vertices
 	li t1, 2
 	bge t0, t1, CONTINUAR_MENOR_CAMINHO
