@@ -13,13 +13,25 @@
 	li s0,0			# zera o contador
 CONTA:  addi s0,s0,1		# incrementa o contador
 
+	addi sp, sp, -4
+	sw ra, 0(sp)
+
 #	call KEY		# le o teclado	com wait
 	call KEY2       	# le o teclado 	sem wait
 
 	### EDITADO POR NÓS ####
-	la t0, MAIN
+	la t0, TRATAR_FRAME
 	jalr ra, t0, 0
 	########################
+
+	## configuracao de frame ##
+	li t0, 0
+
+	FOR1_CONTA: nop
+	beq t0, zero, CONTA
+	addi t0, t0, -1
+	jal zero, FOR1_CONTA
+	#############################
 
 	j CONTA			# volta ao loop
 
@@ -54,5 +66,4 @@ KEY2:	li t1,0xFF200000		# carrega o endereço de controle do KDMMIO
 FIM:	ret				# retorna
 
 .data
-.include "..\moviment\movimento.s"
 .include "tratamentos.s"

@@ -1,9 +1,49 @@
+.data
+.include "..\..\images\mapa.s"
+.include "..\..\images\elevador.s"
+.include "..\..\images\mola.s"
+.include "..\..\images\mola1.s"
+.include "..\..\images\barril1.s"
+.include "..\..\images\barril2.s"
+.include "..\..\images\barril3.s"
+.include "..\..\images\barril4.s"
+.include "..\..\images\princesa.s"
+.include "..\..\images\princesa_walk.s"
+.include "..\..\images\mario.s"
+#	struct personagens{
+#		imagem[],
+#		posicaoX,
+#		posicaoY,
+#		is_jumping,
+#		in_escada
+#	} Personagens
 
+	# Objetos[20]
+	# 20 x 7 = 140
+	
+#	struct objetos{
+#		imagem[],
+#		posicaoX,
+#		posicaoY,
+#		velocidade (pixels),
+#		direcao (0 - esquerda; 1 - direita)
+#		tipo ( 0 - barril; 1 - mola )
+#		is_jumping ( 0 - falso ; > 0 - verdadeiro )
+#	} Objetos
+
+	# Objetos[20]
+	# 20 x 5 = 100
+	Personagens: .word princesa, 0, 200, 0,0, mario, 160, 36,0,0
+	
+	Objetos: .word 	barril1,0,20,3,1,0,0, barril1,120,0,3,1,0,0, barril1,20,20,3,1,0,0, barril1,40,20,3,1,0,0, barril1,0,125,3,1,0,0
+					
+	mensagem: .string "Escreva um numero para mover diferente de zero\n"
 .text
 
-MAIN2: nop
+MAIN: nop
 	addi sp, sp, -4
 	sw ra, 0(sp)
+	
 	
 	jal ra, CRIAR_MAPA
 
@@ -24,6 +64,12 @@ WHILED: nop
 	la a1, Personagens
 	jal ra, MOVER_PERSONAGEM
 	
+	la a1, Personagens
+	lw t0, 0(a1)
+	la t1, princesa
+	beq t0, t1, ANIMACAO
+	sw t1,0(a1)
+VOLTA_ANIMACAO: nop
 	la a0, Objetos 			# vetor contendo objetos
 	li a1, 5				# quantidade objetos
 	jal ra, MOVER_OBJETOS
@@ -34,6 +80,11 @@ WHILED: nop
 EXIT: nop
 	li a7 10
 	ecall
+	
+ANIMACAO: nop
+	la t1, princesa_walk
+	sw t1, 0(a1)
+	jal zero, VOLTA_ANIMACAO
 ##############################
 
 #################### void cria_mapa()
@@ -214,16 +265,48 @@ FOR1_MOVER_OBJETOS: nop
 		li a4, 0
 		jal ra, VERIFICAR_CHAO
 		
-		# a1 ( se esta no chao )
+		mv a5, a1		# a5 = a1 ( se esta no chao )
 		
 		## CHAMA MOVER __ OBJETO ## 
 		lw t0, 4(sp)	# struct
-		lw t2, 20(t0)	# le o tipo do objeto
+		lw a0, 0(t0)		# imagem[]
+		lw a1, 4(t0)		# posicao X
+		lw a2, 8(t0)		# posicao Y
+		lw a3, 12(t0)		# velocidade
+		lw a4, 16(t0)		# direcao
 		
-		mv a0, t0		# argumento struct
-		#bne t2, zero, PULA_BARRIL # nao eh barril
+		lw t2, 20(t0)	# le o tipo do objeto
+		bne t2, zero, PULA_BARRIL # nao eh barril
 		jal ra, MOVER_BARRIL
+		jal zero, PULA_MOLA
+PULA_BARRIL: nop
 
+		li t3, 1
+		bne t2, t3, PULA_MOLA	# nao eh mola
+
+		## verifica posicao ##
+		li t3, 200
+		blt a1, t3, NAO_IMPEDIR_A5
+		li a5, 0	# impede a5 de atrapalhar nossos planos...
+NAO_IMPEDIR_A5: nop
+		## verifica is_jumping ##		
+		lw t3, 24(t0)		# is_jumping ?
+		add a5, t3, a5		# se a soma de in_gound com is_jumping = 0, significa que ele esta em queda livre.
+		
+		beq a5, zero, PULA_ALTERNAR_JUMPING
+		
+		## is_jumping ++ ## 
+		addi t3, t3, 1
+		
+		li t4, 6			# max saltos, se saltos = 8, reseta e libera queda livre
+		blt t3, t4, PULA_ALTERNAR_JUMPING
+		
+		li t3, 0			# reset
+PULA_ALTERNAR_JUMPING: nop
+		sw t3, 24(t0)		# ( alterna is_jumping quando necessario )
+		jal ra, MOVER_MOLA
+PULA_MOLA: nop
+		## Salvar novas informacoes ## 
 		lw t0, 4(sp)	# struct
 		sw a0, 0(t0)		# imagem[]
 		sw a1, 4(t0)		# posicao X
@@ -249,87 +332,47 @@ EXIT_FOR1_MOVER_OBJETOS: nop
 	ret
 ################################
 
-####### mover_barril(struct objeto, int in_ground)
+####### mover_barril(int imagem[], int x, int y, int velocidade, int direcao, int in_ground)
 ## move o barril
-# a0 -> struct objeto
-# a1 -> in_ground ( 0 - nao esta no chao, 1 - esta no chao )
+# a0 -> imagem[]
+# a1 -> posicao X
+# a2 -> posicao Y
+# a3 -> velocidade
+# a4 -> direcao ( 0 - esquerda, 1 - direita )
+# a5 -> in_ground ( 0 - nao esta no chao, 1 - esta no chao )
+## retorna novos valores
+# a0 -> nova imagem[]
+# a1 -> nova posicao X
+# a2 -> nova posicao Y
+# a3 -> nova direcao
 MOVER_BARRIL: nop
-	addi t0, a0, 0	# t0 = a0 ( struct )
-	addi t1, a1, 0	# t1 = a1 ( in_ground ? )
+	## preparando para chamada de funcoes ##
+	addi sp, sp, -16
+	sw ra, 0(sp)	# salva retorno
+	sw a0, 4(sp)	# salva imagem[]
+	sw a2, 8(sp)	# salva posicao Y
+	sw a3, 12(sp)	# salva velocidade
 	
-	## lendo valores do objeto ##
-	lw a0, 0(t0)	# imagem[]
-	lw a1, 4(t0)	# posicao X
-	lw a2, 8(t0)	# posicao Y
-	#lw a3, 12(t0)	# velocidade
-	lw a4, 16(t0)	# direcao
-	#lw t2, 20(t0)	# is_something ( in_escada )
-	
-	## verifica se esta descendo escada ##
-	lw t2, 20(t0)	# is_something ( in_escada )
-	li t3, 5
-	bge t2, t3, DESCER_BARRIL_ESCADA
-	
-	## iniciando pilhagem para chamada de funcoes ##
-	addi sp, sp, -12
-	sw ra, 0(sp)
-	sw t0, 4(sp)
-	sw t1, 8(sp)
-	
-	## verificando escada ##
-	lw t2, 4(a0)	# altura do objeto
+	## chamando VERIFICAR ESCADA ##
+	lw t2, 4(a0)	# altura da imagem
 	add a2, a2, t2	# desloca verificacao para baixo do objeto
-	addi a2, a2, 4	# desloca +4 para baixo em verificacao
-	
-	li a3, 105		# cor verde
+	addi a2, a2, 4	# desloca +4 para baixo
+	li a3, 105
 	jal ra, VERIFICAR_ESCADA
 	
-	mv t3, a0
+	mv t2, a0
 	
-	## encerra pilha, ja que nao havera mais chamadas de funcoes ## 
+	## retorna valores originais para continuar funcao ##
 	lw ra, 0(sp)
-	lw t0, 4(sp)	# struct
-	lw t1, 8(sp)	# in_ground ?
-	addi sp, sp, 12
+	lw a0, 4(sp)
+	lw a2, 8(sp)
+	lw a3, 12(sp)
 	
-	## le de volta os valores modificados pela funcao ##
-	lw a0, 0(t0)	# imagem[]
-	lw a2, 8(t0)	# posicao Y
-	lw a3, 12(t0)	# velocidade
-	lw t2, 20(t0)	# is_something ( in_escada )
-	beq t3, zero, BARRIL_FORA_ESCADA
-	
-	## se estiver detectando a escada ##
-	addi t2, t2, 1	# percent in_escada++
-	sw t2, 20(t0)	# new percent
-	li t3, 5		# se nao estiver completamente dentro da escada
-	blt t2, t3, BARRIL_ESPERA_ESCADA
-	
-	## verifica decisao de barril se ele desce ou nao na escada ##
-	mv t3, a0
-	li a7, 41
-	ecall
-	
-	li t2, 2
-	remu t2, a0, t2
-	
-	mv a0, t3	# retorna valor original de a0
-	
-	beq t2, zero, DECIDIU_NAO_DESCER_BARRIL
-	
-	## se decidiu descer, prossegue normalmente ##
-	addi a3, a4, 0	# prepara retorno de funcao
-	ret
-	## se decidiu nao descer, deve bloquear descida ate finalizar deteccao de escada ##
-	DECIDIU_NAO_DESCER_BARRIL: nop
-	li t2, -1		# bloqueio de descida
-	sw t2, 20(t0)	# salva percent flag de bloqueio
-	jal zero, BARRIL_ESPERA_ESCADA	
-	BARRIL_FORA_ESCADA: nop
-	li t2, 0		# reseta percent
-	sw t2, 20(t0)	# salva reset
-			
-	BARRIL_ESPERA_ESCADA: nop
+	beq t2, zero, BARRIL_FORA_ESCADA
+	addi a2, a2, 2
+	jal zero, PULA_MUDAR_DIRECAO
+BARRIL_FORA_ESCADA: nop
+
 	## tratamento de animacao barril ##
 	la t2, barril1
 	beq a0, t2, ANIMACAO_BARRIL1
@@ -353,7 +396,7 @@ ANIMACAO_BARRIL3: nop
 	## tratamento de movimento do barril ##
 PULAR_ANIMACAO_BARRIL: nop
 	## verifica se barril esta no chao ##
-	bne t1, zero, PULA_BARRIL_GRAVITY	# se estiver no chao, pula
+	bne a5, zero, PULA_BARRIL_GRAVITY	# se estiver no chao, pula
 	addi a2, a2, 2
 	
 PULA_BARRIL_GRAVITY: nop
@@ -370,6 +413,7 @@ PULA_BARRIL_GRAVITY: nop
 	
 	li a3, 0		# 0 = esquerda
 PULA_MUDAR_DIRECAO: nop
+	addi sp, sp, 16
 	ret
 MOVER_ESQUERDA_BARRIL: nop
 	## movendo para esquerda ##
@@ -381,34 +425,7 @@ MOVER_ESQUERDA_BARRIL: nop
 	blt t2, a1, PULA_MUDAR_DIRECAO
 	
 	li a3, 1		# 1 = direita
-
-	ret
-DESCER_BARRIL_ESCADA: nop
-	## verificacao de contador para saber quando barril pode verificar parada ##
-	li t3, 15
-	beq t2, t3, PULA_VERI_STOP_BARRIL # se barril ja desceu 10 posicoes, pode comecar a verificar
-	addi t2, t2, 1					# caso contrario, descendo++
-	jal zero, PULA_STOP_BARRIL
-	
-	## verifica se barril tocou no chao ao descer escada ##
-	PULA_VERI_STOP_BARRIL: nop
-	beq t1, zero, PULA_STOP_BARRIL	# se ainda nao tocou, continua descendo
-	li t2, 0	# encerra descida
-	xori a4, a4, 1	# inverte direcao
-	
-	## preparando para retornar ##
-	PULA_STOP_BARRIL: nop
-	mv a3, a4		# prepara retorno de funcao a3 (direcao)
-	addi a2, a2, 2	# proximo Y
-	sw t2, 20(t0)	# nova direcao
-	
-	## tratanado animacao na escada ##
-	la t2, barril_escada1
-	bne a0, t2, ANIMACAO_BARRIL_ESCADA
-	la a0, barril_escada2
-	ret
-	ANIMACAO_BARRIL_ESCADA: nop
-	la a0, barril_escada1	
+	addi sp, sp, 16
 	ret
 #################################
 
@@ -504,8 +521,7 @@ MOVER_PERSONAGEM: nop
 	addi a4, a4, 1
 	li a3, 0		# in_jumping = false ( verificar isso dps )
 	lw t0, 4(sp)	# struct para salvamentos
-	li t2, 7		# posicoes a serem subidas
-	
+	li t2, 8		# posicoes a serem subidas
 	blt a4, t2, RETORNA_MOVIMENTO
 	li a4, 0		# finaliza animacao
 	jal zero, RETORNA_MOVIMENTO
@@ -550,12 +566,7 @@ MOVER_PERSONAGEM: nop
 	beq t1, t2, MOVER_PERSON_CIMA
 	li t2, 's'
 	beq t1, t2, MOVER_PERSON_BAIXO
-	
 RETORNA_MOVIMENTO: nop	
-	
-	lw a0, 8(sp)
-	jal ra, ANIMACAO_PERSONAGEM
-	lw t0,4(sp)
 	
 	## salvando informacoes novas do personagem ##
 	sw a0, 0(t0)
@@ -571,7 +582,7 @@ RETORNA_MOVIMENTO: nop
 	addi sp, sp, 12
 	
 	ret
-MOVER_PERSON_DIREITA: nop	
+MOVER_PERSON_DIREITA: nop
 	## movendo o personagem em 5 posicoes ##
 	addi a1, a1, 5
 	li t1, 310	# efeito de comparacao
@@ -586,7 +597,7 @@ MOVER_PERSON_ESQUERDA: nop
 	## movendo o personagem em 5 posicoes ##
 	addi a1, a1, -5
 	li t1, 0	# efeito de comparacao
-	li a4, 0	# in_escada
+	li a4, 0
 	## verificando se chegou ao fim do mundo da esquerda
 	blt t1, a1, RETORNA_MOVIMENTO
 	addi a1, a1, 5	# se chegou, retira o movimento
@@ -672,193 +683,11 @@ IN_JUMPING: nop
 	## diminui y, pulando ##
 	addi a2, a2, -5	# sobe 3 posicoes em Y
 	addi a3, a3, 1	# jumping++
-	li t2, 3		# maximo de saltos
+	li t2, 6		# maximo de saltos
 	blt a3, t2, SEM_GRAVITY
 	li a3, 0		# is_jumping = false
 	jal zero, SEM_GRAVITY
 ########################
-
-####### animacao_personagem()
-## trata a animacao do personagem
-# sem parametros
-## retorna nova imagem/skin
-# a0 -> new imagem[]
-ANIMACAO_PERSONAGEM: nop
-	## verifica se esta em force subida escada ##
-	la t1, Personagens
-	lw t0, 0(t1)	# imagem[]
-	lw t4, 16(t1)	# in_escada
-	li t3, 2		# flag force
-	bge t4, t3, ANIM_PERSON_FORCE_SUBIDA
-
-	## verifica se animacao esta para direita ##
-	li t2, 'd'
-	beq a0, t2, ANIM_PERSON_DIREITA
-	
-	## verifica se animacao esta para esquerda ##
-	li t2, 'a'
-	beq a0, t2, ANIM_PERSON_ESQUERDA
-
-	## verifica se animacao esta na escada ##	
-	li t2, 'w'
-	beq a0, t2, ANIM_PERSON_CIMA
-	
-	## verifica se animacao esta na escada ##
-	li t2, 's'
-	beq a0, t2, ANIM_PERSON_CIMA
-
-VOLTA_ANIM_PERSON_CIMA: nop	
-	## caso contrario, idle or jump ##
-	la t2, Ultima_direcao
-	lb t2, 0(t2)
-	
-	## se estiver pulando parado ##
-	lw t3, 12(t1)	# is_jumping
-	beq t3, zero, ANIM_PERSON_IDLE
-	
-	## caso contrario, verifica qual lado o jogador ficou parado ##
-	li t3, 'd'
-	beq t2, t3, ANIM_PERSON_JUMPING_RIGHT
-	li t3, 'a'
-	beq t2, t3, ANIM_PERSON_JUMPING_LEFT
-	
-	ANIM_PERSON_IDLE: nop
-	
-	## desvio padrao de frames ##
-	la t3, Desvio_padrao
-	lb t4, 0(t3)
-	li t5, 2
-	addi t4, t4, 1
-	beq t5, t4, DESVIO_ATINGIDO
-	sb t4, 0(t3)
-	jal zero, ENCERRA_MARIO_ANIMACAO
-	
-	DESVIO_ATINGIDO: nop
-	li t4, 0
-	sb t4, 0(t3)
-	
-	li t3, 'd'
-	beq t2, t3, ANIM_PERSON_IDLE_RIGHT
-	la t0, mario_idle_left
-	jal zero, ENCERRA_MARIO_ANIMACAO
-	
-	ANIM_PERSON_IDLE_RIGHT: nop
-	la t0, mario_idle_right
-	jal zero, ENCERRA_MARIO_ANIMACAO
-
-ANIM_PERSON_CIMA: nop
-	bne t4, zero, ANIM_PERSON_ESCADA
-	jal zero, VOLTA_ANIM_PERSON_CIMA
-	
-	ANIM_PERSON_ESCADA: nop
-	la t2, mario_escada
-	beq t0, t2, MARIO_ESCADA2
-	
-	la t0, mario_escada
-	jal zero, ENCERRA_MARIO_ANIMACAO
-	
-	MARIO_ESCADA2: nop
-	la t0, mario_escada2
-	jal zero, ENCERRA_MARIO_ANIMACAO
-	
-ANIM_PERSON_ESQUERDA: nop
-	la t2, Ultima_direcao
-	sb a0, 0(t2)
-	
-	## se estiver pulando, ignora animacao padrao ##
-	lw t2, 12(t1)	# in_jumping
-	bne t2, zero, ANIM_PERSON_JUMPING_LEFT
-	
-	## se estiver andando ##
-	## animacao do personagem ##
-	la t2, mario_run_left
-	beq t2, t0, MARIO_PARADO_LEFT # se estiver correndo, poe parado
-	
-	la t2, mario_idle_left
-	beq t2, t0, MARIO_ANDANDO_LEFT	# se estiver parado, poe andando
-	
-	la t0, mario_run_left		# se estiver andando, poe correndo
-	jal zero, ENCERRA_MARIO_ANIMACAO
-	
-	MARIO_PARADO_LEFT: nop
-	la t0, mario_idle_left
-	jal zero, ENCERRA_MARIO_ANIMACAO
-	MARIO_ANDANDO_LEFT: nop
-	la t0, mario_walk_left
-	jal zero, ENCERRA_MARIO_ANIMACAO
-		
-	ANIM_PERSON_JUMPING_LEFT: nop
-	la t0, mario_jump_left
-	jal zero, ENCERRA_MARIO_ANIMACAO
-
-ANIM_PERSON_DIREITA: nop
-	la t2, Ultima_direcao
-	sb a0, 0(t2)
-
-	## se estiver pulando, ignora animacao padrao ##
-	lw t2, 12(t1)	# in_jumping
-	bne t2, zero, ANIM_PERSON_JUMPING_RIGHT
-	
-	## se estiver andando ##
-	## animacao do personagem ##
-	la t2, mario_run_right
-	beq t2, t0, MARIO_PARADO_RIGHT # se estiver correndo, poe parado
-	
-	la t2, mario_idle_right
-	beq t2, t0, MARIO_ANDANDO_RIGHT	# se estiver parado, poe andando
-	
-	la t0, mario_run_right		# se estiver andando, poe correndo
-	jal zero, ENCERRA_MARIO_ANIMACAO
-	
-	MARIO_PARADO_RIGHT: nop
-	la t0, mario_idle_right
-	jal zero, ENCERRA_MARIO_ANIMACAO
-	MARIO_ANDANDO_RIGHT: nop
-	la t0, mario_walk_right
-	jal zero, ENCERRA_MARIO_ANIMACAO
-		
-	ANIM_PERSON_JUMPING_RIGHT: nop
-	la t0, mario_jump_right
-	jal zero, ENCERRA_MARIO_ANIMACAO
-
-ANIM_PERSON_FORCE_SUBIDA: nop
-	##	verifica qual skin esta atualmente ##
-	la t3, mario_finish_escada1
-	beq t0, t3, MARIO_FORCE_SUBIDA_2
-	
-	la t3, mario_finish_escada2
-	beq t0, t3, MARIO_FORCE_SUBIDA_3
-	
-	la t3, mario_finish_escada3
-	beq t0, t3, MARIO_FORCE_SUBIDA_4
-	
-	la t3, mario_finish_escada4
-	beq t0, t3, MARIO_FORCE_SUBIDA_5
-	
-	la t0, mario_finish_escada1
-	jal zero, ENCERRA_MARIO_ANIMACAO
-
-
-	MARIO_FORCE_SUBIDA_2: nop
-	la t0, mario_finish_escada2
-	jal zero, ENCERRA_MARIO_ANIMACAO
-	
-	MARIO_FORCE_SUBIDA_3: nop
-	la t0, mario_finish_escada3
-	jal zero, ENCERRA_MARIO_ANIMACAO
-	
-	MARIO_FORCE_SUBIDA_4: nop
-	la t0, mario_finish_escada4
-	jal zero, ENCERRA_MARIO_ANIMACAO
-	
-	MARIO_FORCE_SUBIDA_5: nop
-	la t0, mario_finish_escada5
-	jal zero, ENCERRA_MARIO_ANIMACAO		
-	
-	ENCERRA_MARIO_ANIMACAO: nop
-	#sw t0, 0(t1)	# salva nova skin
-	mv a0, t0
-	ret
 
 ####### bool verificar_chao(imagem[], int x, int y, int cor, int corpo)
 ## verifica se a imagem toca o chao
