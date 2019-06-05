@@ -26,6 +26,7 @@ Facilitar e organizar o fluxo de trabalho do grupo.
 
 * **FPGA**:
   - https://www.fpga4fun.com/
+  - http://www.asic-world.com/verilog/veritut.html
 * **Git help**:
   - https://github.com/joshnh/Git-Commands
   - http://rogerdudler.github.io/git-guide/
