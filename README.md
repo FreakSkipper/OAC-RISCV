@@ -11,20 +11,20 @@ Facilitar e organizar o fluxo de trabalho do grupo.
 * Projeto Donkey Kong:
     Implementação do jogo de arcade Donkey Kong em Assembly RISC-V.
     
-  * [*] Discutir sobre a UI;
-  * [*] Organização dos arquivos;
-  * [*] Quantidade de sprites e cenários;
-  * [*] Sons;
-  * [*] Funcionalidades que serão implementadas.
+  * [x] Discutir sobre a UI;
+  * [x] Organização dos arquivos;
+  * [x] Quantidade de sprites e cenários;
+  * [x] Sons;
+  * [x] Funcionalidades que serão implementadas.
 
 * Laboratórios:
     Implementação de exceção no processador RISC-V (DE1-SoC verilog).
     
-  * [*] Laboratório 1 - Exercícios Assembly e famialização com as ferramentas;
-  * [*] Laboratório 2 - Exercícios Assembly e famialização com as ferramentas;
-  * [*] Laboratório 3 - UNICICLO;
-  * [*] Laboratório 4 - MULTICICLO;
-  * [] **Não foi feito** - Laboratório 5 - PIPELINE;
+  * [x] Laboratório 1 - Exercícios Assembly e famialização com as ferramentas;
+  * [x] Laboratório 2 - Exercícios Assembly e famialização com as ferramentas;
+  * [x] Laboratório 3 - UNICICLO;
+  * [x] Laboratório 4 - MULTICICLO;
+  * [ ] **Não foi feito** - Laboratório 5 - PIPELINE;
 
 > Extras 📚
 * [Google Drive](https://drive.google.com/drive/folders/1m1Wl_4i-qkH2-OOJBxJCaBhvV3N9hANt).
