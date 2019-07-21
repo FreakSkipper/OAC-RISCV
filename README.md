@@ -4,22 +4,27 @@ Facilitar e organizar o fluxo de trabalho do grupo.
 ## Integrantes:
 * Eduardo F. Assis;
 * Alexandre S. C. Oliveira;
-* _Cadê o resto?_
+* Thiaggo F. Souza.
   
-## Trabalhando no repositório:
-* Cada usuário cria sua branch, quantas quiserem (<_autor_>_<_etc_>);
-* Para alterar no branch master, fazer _pull request_.
 
 ### TODO:
 * Projeto Donkey Kong:
-  * [ ] Discutir sobre a UI;
-  * [ ] Organização dos arquivos;
-  * [ ] Quantidade de sprites e cenários;
-  * [ ] Funcionalidades que serão implementadas.
+    Implementação do jogo de arcade Donkey Kong em Assembly RISC-V.
+    
+  * [*] Discutir sobre a UI;
+  * [*] Organização dos arquivos;
+  * [*] Quantidade de sprites e cenários;
+  * [*] Sons;
+  * [*] Funcionalidades que serão implementadas.
 
-* Labs:
-  * Aguardando...
-  
+* Laboratórios:
+    Implementação de exceção no processador RISC-V (DE1-SoC verilog).
+    
+  * [*] Laboratório 1 - Exercícios Assembly e famialização com as ferramentas;
+  * [*] Laboratório 2 - Exercícios Assembly e famialização com as ferramentas;
+  * [*] Laboratório 3 - UNICICLO;
+  * [*] Laboratório 4 - MULTICICLO;
+  * [] **Não foi feito** - Laboratório 5 - PIPELINE;
 
 > Extras 📚
 * [Google Drive](https://drive.google.com/drive/folders/1m1Wl_4i-qkH2-OOJBxJCaBhvV3N9hANt).
