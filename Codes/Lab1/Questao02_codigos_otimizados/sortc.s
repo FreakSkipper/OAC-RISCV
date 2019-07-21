@@ -1,0 +1,169 @@
+.data		#adicionado 
+v:
+  .word 9
+  .word 2
+  .word 5
+  .word 1
+  .word 8
+  .word 2
+  .word 4
+  .word 3
+  .word 6
+  .word 7
+.LC0:
+  .string "%d\t"
+
+
+.text  		#adicionado
+
+jal zero,main
+show:		#modificado de show(int*, int) para show
+  addi sp,sp,-48
+  sw ra,44(sp)
+  sw s0,40(sp)
+  addi s0,sp,48
+  sw a0,-36(s0)
+  sw a1,-40(s0)
+  sw zero,-20(s0)
+.L3:
+  lw a4,-20(s0)
+  lw a5,-40(s0)
+  bge a4,a5,.L2
+  lw a5,-20(s0)
+  slli a5,a5,2
+  lw a4,-36(s0)
+  add a5,a4,a5
+  lw a5,0(a5)
+  mv a0,a5			#agora move o a5 para o a0, ou seja, coloca o número a ser printado no a0
+  #lui a5,%hi(.LC0)		removido pois coloca uma string no a0 e não um número
+  #addi a0,a5,%lo(.LC0)		removido pois coloca uma string no a0 e não um número   
+  #call printf			trocar o printf por uma rotina que faça o mesmo trabalho (representada nas linhas comentadas logo abaixo)
+  addi a7,zero, 1	# colocar o 1 no a7
+  ecall			#print int
+  addi a7,zero,11	#a7 = 11 
+  addi a0,zero,'\t'	#a0 = '\t'
+  ecall			#print char 
+  lw a5,-20(s0)		
+  addi a5,a5,1
+  sw a5,-20(s0)
+  j .L3
+.L2:
+  li a0,10
+  #call putchar		 fazer rotina semelhante ao putchar (representada nas linhas comentadas logo abaixo)
+  addi a7, zero, 11	# a7 recebe 11
+  mv t0,a0		# coloca a0 em t0
+  addi a0, zero, '\n'	# a0 = "\n"
+  ecall			# print char
+  mv a0,t0		# coloca t0 em a0
+  nop
+  lw ra,44(sp)
+  lw s0,40(sp)
+  addi sp,sp,48
+  jr ra
+swap:		 #modificado de swap(int*, int) para swap
+  addi sp,sp,-48
+  sw s0,44(sp)
+  addi s0,sp,48
+  sw a0,-36(s0)
+  sw a1,-40(s0)
+  lw a5,-40(s0)
+  slli a5,a5,2
+  lw a4,-36(s0)
+  add a5,a4,a5
+  lw a5,0(a5)
+  sw a5,-20(s0)
+  lw a5,-40(s0)
+  addi a5,a5,1
+  slli a5,a5,2
+  lw a4,-36(s0)
+  add a4,a4,a5
+  lw a5,-40(s0)
+  slli a5,a5,2
+  lw a3,-36(s0)
+  add a5,a3,a5
+  lw a4,0(a4)
+  sw a4,0(a5)
+  lw a5,-40(s0)
+  addi a5,a5,1
+  slli a5,a5,2
+  lw a4,-36(s0)
+  add a5,a4,a5
+  lw a4,-20(s0)
+  sw a4,0(a5)
+  nop
+  lw s0,44(sp)
+  addi sp,sp,48
+  jr ra
+sort:		#modificado de sort(int*, int) para sort
+  addi sp,sp,-48
+  sw ra,44(sp)
+  sw s0,40(sp)
+  addi s0,sp,48
+  sw a0,-36(s0)
+  sw a1,-40(s0)
+  sw zero,-20(s0)
+.L9:
+  lw a4,-20(s0)
+  lw a5,-40(s0)
+  bge a4,a5,.L10
+  lw a5,-20(s0)
+  addi a5,a5,-1
+  sw a5,-24(s0)
+.L8:
+  lw a5,-24(s0)
+  bltz a5,.L7
+  lw a5,-24(s0)
+  slli a5,a5,2
+  lw a4,-36(s0)
+  add a5,a4,a5
+  lw a4,0(a5)
+  lw a5,-24(s0)
+  addi a5,a5,1
+  slli a5,a5,2
+  lw a3,-36(s0)
+  add a5,a3,a5
+  lw a5,0(a5)
+  ble a4,a5,.L7
+  lw a1,-24(s0)
+  lw a0,-36(s0)
+  call swap	#modificado de swap(int*, int) para swap 
+  lw a5,-24(s0)
+  addi a5,a5,-1
+  sw a5,-24(s0)
+  j .L8
+.L7:
+  lw a5,-20(s0)
+  addi a5,a5,1
+  sw a5,-20(s0)
+  j .L9
+.L10:
+  nop
+  lw ra,44(sp)
+  lw s0,40(sp)
+  addi sp,sp,48
+  jr ra
+main:
+  addi sp,sp,-16
+  sw ra,12(sp)
+  sw s0,8(sp)
+  addi s0,sp,16
+  li a1,10
+  lui a5,%hi(v)
+  addi a0,a5,%lo(v)
+  call show	#modificado de show(int*, int) para show
+  li a1,10
+  lui a5,%hi(v)
+  addi a0,a5,%lo(v)
+  call sort
+  li a1,10
+  lui a5,%hi(v)
+  addi a0,a5,%lo(v)
+  call show
+  li a5,0
+  mv a0,a5
+  lw ra,12(sp)
+  lw s0,8(sp)
+  addi sp,sp,16
+  #jr ra		removido ra do final, pois é final do programa e adicionadas as linhas de código abaixo
+  addi a7, zero,10	#a7 = 10
+  ecall			#exit

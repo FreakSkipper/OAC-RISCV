@@ -1,76 +1,72 @@
-.data
-.include "images\mapa.s"
-.include "images\elevador.s"
-.include "images\mola.s"
-.include "images\mola1.s"
-.include "images\barril1.s"
-.include "images\barril2.s"
-.include "images\barril3.s"
-.include "images\barril4.s"
-.include "images\barril_escada1.s"
-.include "images\barril_escada2.s"
-.include "images\princesa.s"
-.include "images\princesa_walk.s"
-.include "images\mario_idle_left.s"
-.include "images\mario_idle_right.s"
-.include "images\mario_walk_left.s"
-.include "images\mario_walk_right.s"
-.include "images\mario_run_left.s"
-.include "images\mario_run_right.s"
-.include "images\mario_jump_left.s"
-.include "images\mario_jump_right.s"
-.include "images\mario_escada.s"
-.include "images\mario_escada2.s"
-.include "images\mario_finish_escada1.s"
-.include "images\mario_finish_escada2.s"
-.include "images\mario_finish_escada3.s"
-.include "images\mario_finish_escada4.s"
-.include "images\mario_finish_escada5.s"
-#	struct personagens{
-#		imagem[],
-#		posicaoX,
-#		posicaoY,
-#		is_jumping,
-#		in_escada
-#	} Personagens
-	
-#	struct objetos{
-#		imagem[],
-#		posicaoX,
-#		posicaoY,
-#		velocidade (pixels),
-#		direcao (0 - esquerda; 1 - direita)
-#		tipo ( 0 - barril; 1 - mola )
-#		is_something ( 0 - falso ; > 0 - verdadeiro )
-#	} Objetos
+.include "sistema\macros3.s"
 
-	# Objetos[20]
-	# 20 x 7 = 140
-	Personagens: .word mario_idle_right, 0, 200, 0,0, princesa, 160, 36,0,0
-	Ultima_direcao: .byte 'd'
-	Desvio_padrao: .byte 0
-	Objetos: .word 	barril1,0,20,3,1,0,0, barril1,120,0,3,1,0,0, barril1,20,20,3,1,0,0, barril1,40,20,3,1,0,0, barril1,0,125,3,1,0,0
-	
-							
-	mensagem: .string "Escreva um numero para mover diferente de zero\n"
-	
 .text
-##### int main()
+RotinaTratamento(exceptionHandling)
+
 MAIN: nop
-	la t0, CRIAR_MAPA
+	#### RESET PONTUACAO ###
+	la t0, HighPontuacao
+	li t1, 0
+	sh t1, 0(t0)
+	#########################
+
+	JOGO: nop
+	la t0, TELA_INICIAL
 	jalr ra, t0, 0
 	
-	la t0, CRIAR_PERSONAGENS
-	la a0, Personagens		# Vetor Struct Personagem
-	li a1, 2				# Quantidade de personagens a ser impresso
-	jalr ra, t0, 0
+	#### RESET PONTUACAO ###
+	la t0, Pontuacao
+	li t1, 0
+	sh t1, 0(t0)
+	#########################
 	
-	la t0, CONTA
+	### RESET TEMPO ANIMACAO PULO MARIO ###
+	li a7, 130
+	ecall
+	
+	la t3, Tempo_Animacao
+	sw a0, 0(t3)
+	la t3, TempoBonus
+	sw a0, 0(t3)
+	#####################################
+	
+	######## INICIAR ##########
+	la t0, INICIAR_JOGO
 	jalr ra, t0, 0
+	###########################
+	
+	jal zero, JOGO
 	
 	li a7, 10
 	ecall
-###############
-
-.include "src/frames/keypoll.s"
-.include "src/moviment/movimento.s"
+	
+.include "src\frames\frame.s"
+.include "src\frames\desenhos.s"
+.include "src\sounds\Castelo_song.s"
+.include "src\sounds\Esgoto_song.s"
+.include "src\sounds\Coin_song.s"
+.include "src\sounds\Pulo_song.s"
+.include "src\sounds\Botao_song.s"
+.include "src\sounds\Mario_song_2.0.s"
+.include "src\sounds\Morte_song.s"
+.include "src\sounds\Reprodutor_Notas.s"
+.include "src\mapa\mapa.s"
+.include "src\mapa\resetar.s"
+.include "src\mapa\criar_mapa.s"
+.include "src\mapa\criar_mapa2.s"
+.include "src\mapa\criar_mapa3.s"
+.include "src\mapa\criar_mapa4.s"
+.include "src\mapa\criar_mapa5.s"
+.include "src\personagens\movimento.s"
+.include "src\personagens\movimento_mario.s"
+.include "src\personagens\morte.s"
+.include "src\objetos\movimento.s"
+.include "src\objetos\esteiras.s"
+.include "src\objetos\particulas.s"
+.include "src\UI\menu\menu_jogo.s"
+.include "src\UI\score\score.s"
+.include "src\UI\tela\tela_inicial.s"
+.include "src\UI\tela\vidas.s"
+.include "src\UI\creditos\creditos.s"
+.include "sistema\Controle.s"
+.include "sistema\sistema.s"
