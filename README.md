@@ -1,4 +1,5 @@
 # OAC - Exercícios e Projeto
+
 Facilitar e organizar o fluxo de trabalho do grupo.
     
 ## Integrantes:
@@ -26,7 +27,8 @@ Facilitar e organizar o fluxo de trabalho do grupo.
   * [ ] **Não foi feito** - Laboratório 5 - PIPELINE;
 
 > Extras 📚
-    As atividades desenvolvidas foram expostas no nosso canal do youtube [Grupo 01 OAC](https://www.youtube.com/channel/UClF0sVdHH1f-2HvalYO2jWA), e, todo o desenvolvimento foi feito com o auxílio do [Google Drive](https://drive.google.com/drive/folders/1m1Wl_4i-qkH2-OOJBxJCaBhvV3N9hANt).
+
+As atividades desenvolvidas foram expostas no nosso canal do youtube [Grupo 01 OAC](https://www.youtube.com/channel/UClF0sVdHH1f-2HvalYO2jWA), e, todo o desenvolvimento foi feito com o auxílio do [Google Drive](https://drive.google.com/drive/folders/1m1Wl_4i-qkH2-OOJBxJCaBhvV3N9hANt).
 
 * **FPGA**:
   - https://www.fpga4fun.com/
